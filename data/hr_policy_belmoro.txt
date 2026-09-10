@@ -1,0 +1,549 @@
+==============================================================================
+CAFFÈ BELMORO S.P.A. - DIREZIONE PEOPLE & CULTURE
+MANUALE DELLE POLICY HR - EDIZIONE 2025 (rev. 4.2)
+Documento ad uso interno - Distribuzione: tutti i dipendenti del perimetro Italia
+==============================================================================
+
+AVVERTENZA
+Questo documento è un artefatto DIDATTICO e FITTIZIO, creato come knowledge base
+per un progetto universitario di Intelligenza Artificiale. I contenuti sono
+inventati e ispirati a prassi HR di settore: non rappresentano policy reali di
+Caffè Belmoro S.p.A. né di alcuna azienda esistente e non hanno alcun valore legale o
+contrattuale.
+
+------------------------------------------------------------------------------
+1. AMBITO DI APPLICAZIONE E GERARCHIA DELLE FONTI
+------------------------------------------------------------------------------
+
+1.1 Il presente manuale si applica a tutto il personale dipendente delle sedi
+italiane del Gruppo: Torino (headquarter, Nuvola), Rivalta
+(stabilimento e polo logistico), Novara, Caserta, Aosta, Milano (uffici
+commerciali) e Roma. Le sedi estere (Londra, Bruxelles) adottano addendum locali
+che prevalgono in caso di conflitto con il presente testo.
+
+1.2 Gerarchia delle fonti, in ordine decrescente di prevalenza:
+    a) normativa nazionale ed europea vigente;
+    b) CCNL Industria Alimentare e accordi integrativi aziendali;
+    c) il presente manuale delle policy HR;
+    d) le linee guida operative di funzione (Operating Guidelines).
+
+1.3 Il documento è aggiornato annualmente dalla Direzione People & Culture. Le
+revisioni straordinarie sono comunicate tramite la intranet MyBelmoro e via
+e-mail ai responsabili di funzione, che ne curano la diffusione ai team.
+
+1.4 Le funzioni aziendali destinatarie sono: Produzione, Supply Chain, Vendite,
+Marketing, R&D, IT, Finance, Customer Care e People & Culture.
+
+------------------------------------------------------------------------------
+2. ORARIO DI LAVORO E FLESSIBILITÀ
+------------------------------------------------------------------------------
+
+2.1 L'orario contrattuale ordinario è di 39 ore settimanali su 5 giorni, dal
+lunedì al venerdì, per il personale impiegatizio. Per il personale di produzione
+si applica il regime di turnazione previsto dall'accordo integrativo di sito.
+
+2.2 Flessibilità in ingresso e uscita: il personale d'ufficio può entrare tra le
+07:30 e le 10:00 e uscire di conseguenza, garantendo la fascia di compresenza
+obbligatoria 10:00-12:30 e 14:30-16:30. La pausa pranzo ha durata minima di 30
+minuti e massima di 90.
+
+2.3 Banca ore: le ore eccedenti l'orario ordinario, se preventivamente
+autorizzate dal responsabile, confluiscono nella banca ore individuale e possono
+essere recuperate entro 12 mesi oppure monetizzate a dicembre, a scelta del
+dipendente. Il tetto massimo accumulabile è di 80 ore.
+
+2.4 Lavoro straordinario: deve essere autorizzato in anticipo e non può superare
+250 ore annue per dipendente. Le maggiorazioni seguono il CCNL applicato.
+
+2.5 Part-time: è concedibile in forma orizzontale, verticale o mista. Le
+richieste di trasformazione da full-time a part-time hanno priorità nei casi
+previsti dalla legge (patologie oncologiche, assistenza a familiari non
+autosufficienti, figli fino a 13 anni). La risposta motivata è dovuta entro 30
+giorni dalla richiesta.
+
+------------------------------------------------------------------------------
+3. SMART WORKING E LAVORO IBRIDO
+------------------------------------------------------------------------------
+
+3.1 Principio generale. Il Gruppo adotta un modello di lavoro ibrido "hybrid by
+default" per tutte le posizioni la cui attività non richiede presenza fisica
+continuativa. Lo smart working non è un diritto automatico né un benefit
+individuale: è una modalità organizzativa concordata tra dipendente e
+responsabile e formalizzata in un accordo individuale scritto, come previsto
+dalla L. 81/2017.
+
+3.2 Plafond mensile per popolazione aziendale:
+    - Personale impiegatizio (Marketing, Finance, Vendite sede, People &
+      Culture, R&D area uffici): fino a 10 giorni al mese;
+    - Funzioni IT e Digital: fino a 12 giorni al mese, in considerazione della
+      natura interamente digitale delle attività;
+    - Customer Care: fino a 10 giorni al mese, subordinati alla copertura dei
+      turni di servizio;
+    - Profili "full remote" formalmente riconosciuti (sede di lavoro = Remoto):
+      fino a 18 giorni al mese, con obbligo di almeno 2 giornate mensili in
+      presenza per riunioni di team;
+    - Rete vendita esterna: non applicabile, in quanto già in regime di lavoro
+      fuori sede;
+    - Produzione, manutenzione, logistica di magazzino e laboratori qualità:
+      esclusi dal perimetro, salvo mansioni impiegatizie di sito (es.
+      programmazione della produzione), per le quali il plafond è di 4 giorni al
+      mese.
+
+3.3 Regole di prenotazione. I giorni di smart working si prenotano sul portale
+MyBelmoro entro il venerdì della settimana precedente. Il responsabile può
+revocare la giornata con preavviso di 24 ore per esigenze di servizio
+documentate.
+
+3.4 Giornate di presenza obbligatoria. Ogni team definisce un "anchor day"
+settimanale di compresenza, di norma il martedì o il mercoledì. Sono inoltre
+sempre in presenza: le riunioni di kick-off di progetto, le sessioni di
+calibration della performance, gli assessment di selezione e i primi 30 giorni
+di onboarding dei nuovi assunti.
+
+3.5 Requisiti tecnici e di sicurezza. Il dipendente deve operare da un luogo
+idoneo, dotato di connessione stabile, utilizzando esclusivamente dispositivi
+aziendali e la VPN corporate. È vietato lavorare da spazi pubblici non protetti
+quando si trattano dati personali o informazioni classificate come riservate.
+
+3.6 Diritto alla disconnessione. Al di fuori della fascia 08:00-19:00 non è
+richiesta la reperibilità né la risposta a e-mail e messaggistica. I
+responsabili sono tenuti a non programmare riunioni oltre le 18:00 e a
+utilizzare l'invio differito delle e-mail serali.
+
+3.7 Indennità. Ai lavoratori in smart working non spetta il buono pasto per le
+giornate lavorate da remoto; è invece riconosciuto un contributo forfettario di
+2,50 euro al giorno a copertura dei costi di connettività ed energia, erogato in
+busta paga il mese successivo.
+
+3.8 Smart working da estero. È ammesso fino a 20 giorni lavorativi all'anno da
+Paesi UE, previa autorizzazione di People & Culture e verifica fiscale e
+previdenziale. È escluso da Paesi extra-UE.
+
+3.9 Revoca. In presenza di un rating di performance pari o inferiore a 2 nella
+scala aziendale, il responsabile può sospendere temporaneamente l'accordo di
+smart working, riattivandolo al termine del piano di miglioramento.
+
+------------------------------------------------------------------------------
+4. FERIE, PERMESSI E ASSENZE
+------------------------------------------------------------------------------
+
+4.1 Il monte ferie annuo è di 26 giorni lavorativi per il personale
+impiegatizio, ai quali si aggiungono 32 ore di permessi retribuiti (ex
+festività e ROL) su base annua.
+
+4.2 Programmazione. Il piano ferie va caricato su MyBelmoro entro il 31 marzo
+di ogni anno. Almeno 10 giorni consecutivi devono essere fruiti nel periodo
+giugno-settembre. Le richieste superiori a 5 giorni consecutivi richiedono
+approvazione con almeno 15 giorni di preavviso; per assenze fino a 2 giorni il
+preavviso è di 48 ore.
+
+4.3 Residui. Le ferie maturate e non godute devono essere fruite entro il 30
+giugno dell'anno successivo. Oltre tale termine, People & Culture può
+pianificare d'ufficio la fruizione. Un residuo individuale superiore a 20
+giorni è considerato un indicatore di rischio organizzativo e viene segnalato
+al responsabile nel report trimestrale People Analytics.
+
+4.4 Chiusure collettive. Gli stabilimenti osservano una chiusura collettiva di
+due settimane in agosto e di una settimana tra Natale ed Epifania; le giornate
+sono imputate al monte ferie individuale.
+
+4.5 Malattia. L'assenza va comunicata al responsabile entro le 09:30 del primo
+giorno e il numero di protocollo del certificato telematico va inserito su
+MyBelmoro entro 2 giorni. Le fasce di reperibilità per la visita fiscale sono
+10:00-12:00 e 17:00-19:00.
+
+4.6 Permessi retribuiti aggiuntivi: 15 giorni consecutivi per matrimonio o
+unione civile; 3 giorni per lutto di familiare entro il secondo grado; 8 ore
+annue per visite mediche specialistiche documentate; permessi per donazione
+sangue secondo normativa; 150 ore di permesso studio nel triennio per corsi
+riconosciuti.
+
+4.7 Congedo parentale. Al congedo obbligatorio di legge il Gruppo aggiunge, a
+proprio carico, l'integrazione al 100% della retribuzione per i primi 3 mesi di
+congedo facoltativo fruiti entro il sesto anno di età del figlio, per entrambi i
+genitori. Al rientro dalla maternità o paternità è garantito, per i 12 mesi
+successivi, un plafond di smart working maggiorato di 4 giorni al mese rispetto
+al plafond della propria funzione.
+
+4.8 Caregiver. Ai dipendenti che assistono familiari non autosufficienti sono
+riconosciuti, oltre ai permessi ex L. 104/1992, ulteriori 5 giorni annui di
+permesso retribuito aziendale.
+
+------------------------------------------------------------------------------
+5. WELFARE E BENEFIT
+------------------------------------------------------------------------------
+
+5.1 Buono pasto del valore di 8,00 euro per ogni giornata lavorata in presenza
+di durata superiore a 6 ore, laddove non sia disponibile la mensa aziendale.
+
+5.2 Piano di welfare "Belmoro per Te": credito welfare annuo pari a 700 euro per
+i livelli Operaio e Impiegato, 1.200 euro per i Quadri, 2.000 euro per i
+Dirigenti, spendibile su piattaforma dedicata per rimborso spese scolastiche,
+trasporti, sport, previdenza integrativa e assistenza familiari. Il credito non
+speso entro il 31 dicembre confluisce automaticamente nel fondo di previdenza
+complementare.
+
+5.3 Assistenza sanitaria integrativa estesa gratuitamente al nucleo familiare
+per Quadri e Dirigenti; per gli altri livelli l'estensione ai familiari è
+attivabile con contributo agevolato.
+
+5.4 Previdenza complementare: contributo aziendale pari al 2,0% della
+retribuzione utile, elevato al 2,8% per chi versa volontariamente almeno il 3%.
+
+5.5 Benefit di sede: caffetteria aziendale gratuita in tutte le sedi, palestra
+convenzionata, servizio di asilo nido convenzionato a Torino e Settimo
+Torinese, navetta aziendale da Torino Porta Susa allo stabilimento di Settimo
+Torinese.
+
+5.6 Auto aziendale ad uso promiscuo per Dirigenti, Quadri della funzione
+Vendite e per i ruoli con mobilità superiore a 20.000 km annui.
+
+5.7 Congedo di volontariato: 2 giornate retribuite all'anno per attività presso
+enti del terzo settore accreditati dalla Fondazione di Gruppo.
+
+------------------------------------------------------------------------------
+6. POLITICA RETRIBUTIVA
+------------------------------------------------------------------------------
+
+6.1 Struttura della retribuzione. La RAL (retribuzione annua lorda) è composta
+dal minimo tabellare CCNL, dagli scatti di anzianità e dal superminimo
+individuale. A questa si aggiungono le componenti variabili (MBO e premio di
+risultato) e i benefit non monetari.
+
+6.2 Fasce retributive indicative per livello di inquadramento (perimetro Italia,
+valori annui lordi):
+    - Operaio:     da 24.000 a 34.000 euro
+    - Impiegato:   da 32.000 a 52.000 euro
+    - Quadro:      da 52.000 a 85.000 euro
+    - Dirigente:   da 85.000 a 160.000 euro
+Le posizioni presso la sede di Londra prevedono una maggiorazione di località
+compresa tra il 15% e il 25%.
+
+6.3 Revisione salariale annuale (Salary Review). Si svolge nel mese di marzo con
+decorrenza 1° aprile. Il budget di incremento è definito dal Comitato
+Retribuzioni e distribuito ai responsabili in funzione della performance
+dell'anno precedente, del posizionamento rispetto alla fascia (compa-ratio) e
+della criticità della posizione. Indicazioni di riferimento:
+    - rating 5 (Eccellente):   incremento tipico 5-8%
+    - rating 4 (Sopra atteso): incremento tipico 3-5%
+    - rating 3 (In linea):     incremento tipico 1-2,5%
+    - rating 2 (Sotto atteso): nessun incremento
+    - rating 1 (Inadeguato):   nessun incremento, attivazione PIP
+
+6.4 MBO e premio di risultato. Il bonus target è espresso in percentuale della
+RAL: 2% per gli Operai, 5% per gli Impiegati, 12% per i Quadri, 22% per i
+Dirigenti. L'erogazione è compresa tra lo 0% e il 160% del target in funzione
+del raggiungimento degli obiettivi individuali e di Gruppo, ed è liquidata con
+la retribuzione di aprile.
+
+6.5 Equità retributiva. Il Gruppo si è impegnato a portare il gender pay gap
+corretto (a parità di ruolo, livello e anzianità) sotto il 3% entro il 2027.
+People Analytics produce due volte l'anno un'analisi del divario retributivo per
+genere, funzione e livello; gli scostamenti superiori al 5% devono essere
+motivati per iscritto dal responsabile di funzione e, se non giustificati,
+corretti con un intervento dedicato fuori budget.
+
+6.6 Trasparenza. Ogni dipendente può richiedere a People & Culture il proprio
+posizionamento in fascia (compa-ratio) e il confronto anonimizzato con la
+mediana del proprio livello e funzione.
+
+------------------------------------------------------------------------------
+7. PERFORMANCE MANAGEMENT
+------------------------------------------------------------------------------
+
+7.1 Il ciclo di performance è annuale e coincide con l'anno solare. Prevede tre
+momenti formali: definizione degli obiettivi (gennaio-febbraio), check-in di
+metà anno (giugno-luglio) e valutazione finale (gennaio dell'anno successivo).
+
+7.2 Scala di valutazione a 5 livelli:
+    5 = Eccellente, performance ben oltre le attese
+    4 = Sopra le attese
+    3 = In linea con le attese (valore atteso per la maggioranza della
+        popolazione aziendale)
+    2 = Parzialmente sotto le attese
+    1 = Inadeguato
+Non sono ammessi valori decimali, nulli o fuori da questa scala: eventuali
+valori diversi presenti nei sistemi sono errori di data entry da bonificare.
+
+7.3 Calibration. Prima del consolidamento, i responsabili partecipano a sessioni
+di calibrazione per funzione, con l'obiettivo di garantire coerenza dei giudizi.
+La distribuzione attesa a livello di Gruppo è indicativamente: 10% rating 5,
+30-35% rating 4, 40-45% rating 3, 10-12% rating 2, 2-4% rating 1. Non è una
+distribuzione forzata, ma uno scostamento significativo va motivato.
+
+7.4 Piano di miglioramento (PIP). È attivato obbligatoriamente per i rating 1 e
+su valutazione del responsabile per i rating 2. Ha durata di 3 o 6 mesi,
+prevede obiettivi misurabili, incontri di verifica mensili e il supporto di un
+referente People & Culture.
+
+7.5 Engagement score. Due volte l'anno viene somministrata la survey "Voice",
+da cui si ricava un engagement score individuale e di team su scala 0-100. Sono
+soglie di attenzione: team con punteggio medio inferiore a 55, oppure in calo di
+oltre 8 punti rispetto alla rilevazione precedente. In questi casi il
+responsabile è tenuto a definire un action plan entro 45 giorni.
+
+------------------------------------------------------------------------------
+8. FORMAZIONE E SVILUPPO
+------------------------------------------------------------------------------
+
+8.1 Ogni dipendente ha diritto a un minimo di 24 ore di formazione all'anno, di
+cui almeno 8 su temi di sostenibilità, sicurezza e cultura del caffè. Per i
+ruoli tecnici e digitali il target minimo sale a 40 ore.
+
+8.2 Training Center. Il percorso di formazione è erogato attraverso la
+piattaforma interna e comprende quattro academy: Academy del Caffè, Commercial
+Academy, Digital & Data Academy, Leadership Academy.
+
+8.3 Il monitoraggio della fruizione è trimestrale. Un dipendente con meno di 10
+ore di formazione a fine anno è considerato "under-trained" e viene incluso nel
+piano di recupero del primo trimestre successivo.
+
+8.4 Formazione esterna e certificazioni: rimborsabili fino a 2.500 euro annui
+per persona previa approvazione del responsabile e di People & Culture, con
+vincolo di permanenza di 12 mesi dalla conclusione del percorso.
+
+8.5 Mentoring e coaching: programma "Crescere in Belmoro" con abbinamento mentor-
+mentee su base semestrale, riservato a chi ha almeno 18 mesi di anzianità.
+
+------------------------------------------------------------------------------
+9. SELEZIONE, ONBOARDING E MOBILITÀ INTERNA
+------------------------------------------------------------------------------
+
+9.1 Ogni posizione aperta è pubblicata per almeno 10 giorni lavorativi sul
+portale interno di job posting prima della ricerca sul mercato esterno.
+
+9.2 I candidati interni con almeno 18 mesi di permanenza nel ruolo attuale e
+rating di performance pari o superiore a 3 hanno diritto a un colloquio.
+
+9.3 Il processo di selezione esterno prevede di norma: screening telefonico,
+colloquio con People & Culture, colloquio tecnico con la funzione, eventuale
+assessment e proposta economica. Il tempo obiettivo di copertura (time-to-hire)
+è di 45 giorni per i ruoli impiegatizi e 60 giorni per i ruoli manageriali.
+
+9.4 Onboarding. Il nuovo assunto riceve dispositivi e credenziali il primo
+giorno, partecipa alla giornata "Welcome to Belmoro" entro il primo mese e
+lavora con un buddy assegnato per i primi 90 giorni. Il periodo di prova è di 3
+mesi per gli impiegati e 6 mesi per quadri e dirigenti.
+
+9.5 Referral. Il programma "Porta un talento" riconosce un premio di 1.000 euro
+lordi al dipendente che segnala un candidato assunto, erogato al superamento del
+periodo di prova. Sono escluse le segnalazioni relative alla propria linea
+gerarchica.
+
+------------------------------------------------------------------------------
+10. CESSAZIONE DEL RAPPORTO E RETENTION
+------------------------------------------------------------------------------
+
+10.1 Preavviso. I termini di preavviso per dimissioni seguono il CCNL e sono
+indicativamente: 15 giorni per gli Operai, 30 giorni per gli Impiegati, 60
+giorni per i Quadri, 6 mesi per i Dirigenti.
+
+10.2 Exit interview. È obbligatoria per tutte le cessazioni volontarie ed è
+condotta da un referente People & Culture diverso dal responsabile diretto,
+entro gli ultimi 10 giorni di rapporto. Le motivazioni sono codificate secondo
+la tassonomia aziendale: Dimissioni volontarie, Migliore offerta esterna,
+Trasferimento geografico, Fine contratto, Pensionamento, Risoluzione
+consensuale, Licenziamento.
+
+10.3 Soglie di attenzione sul turnover. Il turnover volontario di Gruppo è
+considerato fisiologico fino al 10% annuo. Una funzione che supera il 15% entra
+in "watch list" e deve presentare un piano di retention al Comitato People entro
+60 giorni. Oltre il 20% l'analisi è portata all'attenzione del Comitato
+Esecutivo.
+
+10.4 Fattori di rischio monitorati da People Analytics: engagement score
+inferiore a 45, rating di performance pari o inferiore a 2 per due cicli
+consecutivi, assenza di passaggi di ruolo negli ultimi 4 anni, retribuzione
+inferiore all'85% della mediana di fascia (compa-ratio < 0,85), residuo ferie
+superiore a 20 giorni e ore di formazione inferiori a 10 nell'anno.
+
+10.5 Leve di retention attivabili: revisione retributiva straordinaria fuori
+ciclo, percorso di mobilità interna, incremento del plafond di smart working,
+assegnazione a progetti trasversali, percorso di mentoring dedicato.
+
+10.6 Alumni. Gli ex dipendenti cessati senza rilievi disciplinari entrano nella
+community Alumni e possono essere ricontattati per posizioni aperte
+("boomerang hire") dopo almeno 6 mesi dalla cessazione.
+
+------------------------------------------------------------------------------
+11. DIVERSITY, EQUITY & INCLUSION
+------------------------------------------------------------------------------
+
+11.1 Obiettivi al 2027: almeno il 40% di donne nelle posizioni di Quadro e
+Dirigente; gender pay gap corretto inferiore al 3%; almeno il 30% di donne nelle
+shortlist di selezione per ruoli manageriali.
+
+11.2 Le shortlist di selezione per posizioni da Quadro in su devono includere
+candidature di entrambi i generi; in caso di impossibilità documentata, il
+recruiter ne dà evidenza scritta.
+
+11.3 Congedo di paternità: il Gruppo integra il congedo obbligatorio portandolo
+a 20 giorni lavorativi retribuiti al 100%.
+
+11.4 È attivo un network interno di Employee Resource Groups (genere,
+generazioni, disabilità, LGBTQ+) con budget annuo dedicato e uno sponsor a
+livello di Comitato Esecutivo.
+
+11.5 Accessibilità: tutte le sedi rispettano i requisiti di accessibilità; le
+postazioni sono adattabili su richiesta con il supporto del medico competente.
+
+------------------------------------------------------------------------------
+12. SALUTE, SICUREZZA E BENESSERE
+------------------------------------------------------------------------------
+
+12.1 La gestione della sicurezza è conforme al D.Lgs. 81/2008. La formazione
+generale e specifica è obbligatoria e la sua mancata frequenza comporta
+l'inibizione all'accesso alle aree produttive.
+
+12.2 Sorveglianza sanitaria: visita periodica annuale per gli addetti alle linee
+produttive e biennale per il personale videoterminalista.
+
+12.3 Supporto psicologico: sono disponibili 6 sessioni gratuite all'anno con
+psicologi convenzionati, attivabili in forma anonima tramite il portale welfare.
+
+12.4 Infortuni: vanno segnalati immediatamente al preposto e al servizio di
+prevenzione e protezione, anche se apparentemente lievi.
+
+12.5 Un tasso di assenza individuale superiore a 20 giorni all'anno, escluse
+maternità e infortuni, attiva un colloquio di verifica con People & Culture e,
+se opportuno, il coinvolgimento del medico competente.
+
+------------------------------------------------------------------------------
+13. TRASFERTE E RIMBORSI SPESE
+------------------------------------------------------------------------------
+
+13.1 Le trasferte vanno autorizzate su MyBelmoro prima della prenotazione. I
+viaggi in aereo in classe business sono ammessi solo per tratte superiori a 6
+ore e per i Dirigenti.
+
+13.2 Massimali di rimborso a piè di lista in Italia: pernottamento fino a 140
+euro a notte (180 euro a Milano e Roma), pasto fino a 35 euro, colazione fino a
+10 euro.
+
+13.3 Uso dell'auto propria: rimborso chilometrico secondo tabelle ACI, previa
+autorizzazione preventiva quando la tratta supera i 100 km.
+
+13.4 Le note spese vanno presentate entro 30 giorni dal termine della trasferta,
+con giustificativi allegati. Oltre i 60 giorni il rimborso non è garantito.
+
+------------------------------------------------------------------------------
+14. CODICE ETICO, SEGNALAZIONI E PRIVACY
+------------------------------------------------------------------------------
+
+14.1 Tutti i dipendenti sono tenuti al rispetto del Codice Etico di Gruppo e del
+Modello Organizzativo 231.
+
+14.2 Whistleblowing: il canale di segnalazione è gestito da una piattaforma
+esterna indipendente e garantisce la riservatezza dell'identità del segnalante.
+Sono vietate e sanzionate le ritorsioni. Le segnalazioni ricevono riscontro
+entro 7 giorni e sono istruite entro 3 mesi.
+
+14.3 Regali e ospitalità: sono ammessi solo se di modico valore (soglia
+indicativa 100 euro) e vanno registrati nel registro di funzione se superiori a
+50 euro.
+
+14.4 Privacy dei dati HR (GDPR). I dati del personale sono trattati per finalità
+di gestione del rapporto di lavoro. Le analisi di People Analytics sono
+condotte su dati aggregati o pseudonimizzati; non è ammessa la profilazione
+individuale automatizzata a fini disciplinari. I dati retributivi e di
+performance sono accessibili al solo responsabile di linea, alla funzione People
+& Culture e, in forma aggregata, al Comitato Esecutivo. La conservazione dei
+dati dei cessati è di 10 anni dalla data di cessazione.
+
+------------------------------------------------------------------------------
+15. FAQ INTERNE - LE DOMANDE PIÙ FREQUENTI AL SERVIZIO PEOPLE & CULTURE
+------------------------------------------------------------------------------
+
+D: Quanti giorni di smart working posso fare al mese?
+R: Dipende dalla funzione. Il plafond standard per il personale impiegatizio è
+di 10 giorni al mese, che salgono a 12 per IT e Digital e fino a 18 per i
+profili full remote riconosciuti. La Produzione è esclusa, salvo le mansioni
+impiegatizie di sito che hanno un plafond di 4 giorni al mese.
+
+D: Il buono pasto mi spetta anche quando lavoro da casa?
+R: No. Nelle giornate da remoto non è riconosciuto il buono pasto, ma spetta un
+contributo forfettario di 2,50 euro al giorno per connettività ed energia.
+
+D: Posso lavorare dall'estero?
+R: Sì, fino a 20 giorni lavorativi all'anno da Paesi dell'Unione Europea, previa
+autorizzazione di People & Culture. Da Paesi extra-UE non è consentito.
+
+D: Entro quando devo usare le ferie dell'anno scorso?
+R: Entro il 30 giugno dell'anno successivo a quello di maturazione. Dopo tale
+data la fruizione può essere pianificata d'ufficio.
+
+D: Quanto preavviso serve per una settimana di ferie?
+R: Almeno 15 giorni, perché la richiesta supera i 5 giorni consecutivi. Per
+assenze fino a 2 giorni bastano 48 ore.
+
+D: Cosa devo fare il primo giorno di malattia?
+R: Avvisare il responsabile entro le 09:30 e caricare il numero di protocollo
+del certificato su MyBelmoro entro 2 giorni.
+
+D: Quando viene pagato il bonus?
+R: Con la retribuzione di aprile, sulla base degli obiettivi dell'anno
+precedente. Il target va dal 2% della RAL per gli Operai al 22% per i Dirigenti.
+
+D: Quando cambia il mio stipendio?
+R: La revisione salariale annuale è a marzo con decorrenza dal 1° aprile. Gli
+incrementi sono legati al rating di performance, al posizionamento in fascia e
+alla criticità del ruolo.
+
+D: Che cosa significa avere un rating 2?
+R: Significa performance parzialmente sotto le attese. Non dà diritto a
+incremento salariale nella revisione annuale e il responsabile può attivare un
+piano di miglioramento e sospendere l'accordo di smart working.
+
+D: Quante ore di formazione devo fare?
+R: Minimo 24 ore all'anno, che salgono a 40 per i ruoli tecnici e digitali. Chi
+resta sotto le 10 ore rientra nel piano di recupero del trimestre successivo.
+
+D: Posso candidarmi a una posizione interna?
+R: Sì, se hai almeno 18 mesi nel ruolo attuale e un rating pari o superiore a 3.
+In quel caso hai diritto a un colloquio.
+
+D: Quanto preavviso devo dare se mi dimetto?
+R: Indicativamente 15 giorni per gli Operai, 30 per gli Impiegati, 60 per i
+Quadri e 6 mesi per i Dirigenti, secondo CCNL.
+
+D: L'exit interview è obbligatoria?
+R: Sì per tutte le cessazioni volontarie, ed è condotta da un referente People &
+Culture diverso dal tuo responsabile.
+
+D: Quando una funzione finisce in watch list per il turnover?
+R: Quando il turnover volontario annuo supera il 15%. Oltre il 20% il caso è
+portato al Comitato Esecutivo.
+
+D: Quali sono i segnali di rischio abbandono monitorati?
+R: Engagement sotto 45, rating minore o uguale a 2 per due cicli, nessun
+passaggio di ruolo da oltre 4 anni, compa-ratio sotto 0,85, oltre 20 giorni di
+ferie residue e meno di 10 ore di formazione.
+
+D: Quanto vale il credito welfare?
+R: 700 euro per Operai e Impiegati, 1.200 per i Quadri, 2.000 per i Dirigenti.
+Se non speso entro il 31 dicembre confluisce nella previdenza complementare.
+
+D: Ho diritto al supporto psicologico?
+R: Sì, 6 sessioni gratuite all'anno con psicologi convenzionati, attivabili in
+forma anonima.
+
+D: Al rientro dalla maternità cambia qualcosa sullo smart working?
+R: Sì, per 12 mesi il plafond mensile è maggiorato di 4 giorni rispetto a quello
+standard della tua funzione.
+
+D: Quanto posso spendere per un hotel in trasferta a Milano?
+R: Fino a 180 euro a notte. Il massimale ordinario in Italia è di 140 euro,
+elevato a 180 per Milano e Roma.
+
+D: Entro quando devo presentare la nota spese?
+R: Entro 30 giorni dal termine della trasferta. Oltre i 60 giorni il rimborso
+non è garantito.
+
+D: Chi può vedere i miei dati di performance e retribuzione?
+R: Solo il tuo responsabile di linea e la funzione People & Culture. Il Comitato
+Esecutivo li vede esclusivamente in forma aggregata.
+
+==============================================================================
+FINE DEL DOCUMENTO - People & Culture, edizione 2025 rev. 4.2
+Per quesiti non coperti dal presente manuale: peopleandculture@belmoro-demo.it
+==============================================================================

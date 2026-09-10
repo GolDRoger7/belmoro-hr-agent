@@ -1,0 +1,23 @@
+{
+  "name": "belmoro-hr-agent-backend",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "ingest": "node src/scripts/ingest.js"
+  },
+  "license": "MIT",
+  "description": "Backend orchestratore dell'agente HR ibrido (RAG + data agent)",
+  "dependencies": {
+    "chromadb": "^3.5.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "openai": "^6.49.0"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18.17"
+  }
+}

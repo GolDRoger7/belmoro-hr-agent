@@ -1,0 +1,28 @@
+# ---------------------------------------------------------------------------
+# Microservizio Python "data_agent"  (testato con Python 3.11)
+# ---------------------------------------------------------------------------
+
+# --- API ---
+fastapi==0.141.1
+uvicorn[standard]==0.52.4
+pydantic>=2.9
+
+# --- Data & visualizzazione ---
+pandas==3.0.5
+numpy==2.4.6
+matplotlib==3.11.1
+seaborn==0.13.2
+tabulate==0.10.0          # richiesto da df.to_markdown() nel prompt dell'agente
+
+# --- LLM / agente ---
+langchain==1.4.0
+langchain-openai==1.6.2
+langchain-experimental==0.4.2   # create_pandas_dataframe_agent
+openai==3.13.0
+
+# --- Config ---
+python-dotenv==1.2.3
+
+# --- ChromaDB: serve per avviare il server vettoriale locale (`chroma run`)
+#     interrogato dal backend Node.js ---
+chromadb==1.5.9
