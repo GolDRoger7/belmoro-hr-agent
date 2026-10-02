@@ -342,7 +342,48 @@ Un'analisi pandas può richiedere 15–30 secondi. Invece di un generico spinner
 emette via SSE gli eventi `tool_start` / `tool_end` e l'interfaccia mostra la fase reale
 (*«L'agente Python sta pulendo i dati ed eseguendo l'analisi…»*).
 
-### 8.7 Sicurezza
+### 8.8 Valori vuoti che non sono dati mancanti
+Alla domanda sul turnover per reparto l'agente rispondeva «Customer Care 20%, tutti gli
+altri 0%». Causa: aveva applicato `dropna()` anche a `data_cessazione` e
+`motivo_cessazione`, che sono vuote **per definizione** su chi è ancora in forza — così
+spariva in un colpo solo l'81% della popolazione. La distinzione fra "dato mancante" e
+"vuoto che significa qualcosa" è ora esplicita nel prompt e nella descrizione dello schema,
+insieme a un controllo di plausibilità obbligatorio prima della risposta finale
+(«ho escluso più del 20% delle righe? allora ho filtrato troppo»).
+
+### 8.9 Confronti omogenei e disaggregati fra policy e dati
+Nella domanda ibrida sul gender pay gap il sistema confrontava il gap **grezzo** misurato in
+euro con un obiettivo di policy definito sul gap **corretto** a parità di ruolo e livello,
+espresso in percentuale: due grandezze diverse messe sullo stesso piano. Stesso difetto
+sullo smart working, dove una media unica veniva confrontata con plafond differenziati per
+funzione. La soluzione non è nel data agent ma nell'orchestratore: avendo già letto la
+policy, è lui a dover formulare la richiesta di analisi **nei termini della soglia** —
+stessa unità di misura, stessa definizione, stesso livello di disaggregazione. Sul divario
+retributivo è stata inoltre fissata la convenzione Eurostat
+(`(media_uomini − media_donne) / media_uomini`), perché usare il denominatore femminile
+gonfiava il risultato dal 6,15% al 6,55%.
+
+### 8.10 Il grafico come requisito, non come eventualità
+Con un modello piccolo capita che l'agente concluda l'analisi senza salvare l'immagine. Il
+microservizio verifica l'esistenza del file e, se manca e la domanda ha una dimensione di
+confronto, esegue **un secondo passaggio dedicato** che riprende i risultati già calcolati e
+produce solo il grafico. Stesso principio sul versante opposto: una risposta che spiega il
+metodo senza riportare alcuna cifra viene esplicitamente vietata dal prompt.
+
+### 8.11 Resilienza operativa
+Tre problemi emersi avviando davvero l'architettura, non leggendo il codice:
+- **Permessi OpenAI in propagazione**: dopo aver abilitato il modello di embedding, l'API ha
+  risposto 403 a intermittenza (5 fallimenti su 10 chiamate) per alcuni minuti. Le chiamate
+  OpenAI hanno ora riprove con backoff esponenziale su 429, 5xx, errori di rete e su questa
+  specifica finestra di propagazione.
+- **Riferimento a una collection ricreata**: rilanciando `npm run ingest` a backend acceso,
+  la RAG restava rotta fino al riavvio, perché il backend teneva in cache l'id di una
+  collection ormai cancellata. Il riferimento ora si rinfresca da solo al primo errore.
+- **Processi figli sopravvissuti**: lo script di avvio registrava il PID della subshell e non
+  quello del processo reale, lasciando i servizi in ascolto dopo lo stop. Ora usa `exec` sui
+  binari diretti e libera comunque le porte.
+
+### 8.12 Sicurezza
 Nessuna chiave nel codice: un unico `.env` alla root, letto da `dotenv` (Node) e
 `python-dotenv` (Python), escluso dal versionamento. Il `PythonAstREPLTool` è confinato
 nel microservizio Python, che non è esposto all'esterno e riceve solo la domanda in

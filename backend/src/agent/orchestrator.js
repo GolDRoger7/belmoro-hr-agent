@@ -61,6 +61,13 @@ accessibili solo tramite i tuoi strumenti.
   "calcola il divario retributivo percentuale fra uomini e donne per ciascun livello di
   inquadramento, oltre al divario grezzo complessivo", non un generico "calcola il gender pay
   gap". Riporta sempre nell'unità della policy (di norma una percentuale).
+  Se la soglia di policy è DIFFERENZIATA per gruppo (funzione, livello, sede, tipo di
+  contratto), chiedi al data agent la misura DISAGGREGATA su quel gruppo e non la media
+  complessiva: una media unica confrontata con soglie diverse non dice nulla. Esempio: i
+  plafond di smart working valgono 10 giorni per gli impiegati, 12 per l'IT, 18 per i full
+  remote e 4 per le mansioni di sito in Produzione, quindi la richiesta corretta è "calcola
+  la media e il 90esimo percentile dei giorni di smart working mensili per dipartimento",
+  così da confrontare ogni funzione con il proprio plafond.
 - Rispondi senza strumenti solo per saluti, ringraziamenti, richieste di chiarimento sulle tue
   capacità o riformulazioni di quanto hai già detto in questa conversazione.
 

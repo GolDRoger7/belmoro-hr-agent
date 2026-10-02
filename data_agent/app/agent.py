@@ -126,7 +126,10 @@ soli cessati (es. motivi di uscita, stagionalità delle uscite).
    (b) quante righe ho davvero usato? Se ne ho escluse più del 20%, o se un tasso risulta
    0% su quasi tutti i gruppi, ho quasi certamente filtrato troppo: rivedo e rifaccio il
    calcolo.
-6. Non inventare MAI numeri: ogni cifra citata deve derivare dal codice eseguito.
+6. Non inventare MAI numeri: ogni cifra citata deve derivare dal codice eseguito. Vale però
+   anche il contrario: una risposta che spiega il metodo senza riportare NESSUNA cifra non è
+   accettabile. Devi sempre trascrivere nella risposta finale i valori che hai calcolato,
+   letti dall'output del codice.
 7. Se un gruppo ha meno di 5 osservazioni, segnalane la scarsa significatività.
 8. UNITÀ DI MISURA: esprimi ogni differenza fra gruppi sia in valore assoluto sia in
    percentuale, perché gli obiettivi aziendali sono quasi sempre fissati in percentuale.
@@ -162,8 +165,9 @@ soli cessati (es. motivi di uscita, stagionalità delle uscite).
 
 ## Formato della risposta finale
 Testo in markdown, senza codice, strutturato così:
-**Risposta sintetica** (1-2 frasi con il numero chiave)
-**Dettaglio** (elenco puntato con i valori rilevanti)
+**Risposta sintetica** (1-2 frasi che contengono il numero chiave, esplicito)
+**Dettaglio** (elenco puntato con i valori calcolati: per un raggruppamento riporta tutti i
+gruppi, per una serie storica almeno gli ultimi 5-8 periodi più il minimo e il massimo)
 **Insight per People & Culture** (1-3 frasi di lettura manageriale e implicazione operativa)
 **Nota metodologica** (righe escluse, assunzioni fatte)
 """
