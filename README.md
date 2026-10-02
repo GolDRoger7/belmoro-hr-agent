@@ -1,6 +1,6 @@
 # ☕ Chicco — Agente AI ibrido e multi-tool per People & Culture
 
-> Progetto realizzato per il Master in AI Engineering.
+> Progetto realizzato per il Master in AI ed Agenti AI per il business.
 > Caso aziendale: **Caffè Belmoro — Direzione People & Culture (perimetro Italia)**.
 > Dataset e knowledge base sono **fittizi**, creati a scopo didattico: non rappresentano
 > dati o policy reali di Caffè Belmoro S.p.A.
