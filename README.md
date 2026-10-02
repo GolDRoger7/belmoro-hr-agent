@@ -370,7 +370,36 @@ confronto, esegue **un secondo passaggio dedicato** che riprende i risultati gi�
 produce solo il grafico. Stesso principio sul versante opposto: una risposta che spiega il
 metodo senza riportare alcuna cifra viene esplicitamente vietata dal prompt.
 
-### 8.10 Resilienza operativa
+### 8.10 Le istruzioni importanti non si chiedono, si impongono
+La lezione più utile dei test: con `gpt-4o-mini` una regola scritta dentro un prompt lungo
+viene rispettata *a volte*. Due casi reali, entrambi risolti spostando il vincolo dal prompt
+al codice:
+
+- **Grafici a una barra sola.** Alla domanda «e per il Marketing?» l'agente disegnava una
+  singola barra isolata, che non comunica nulla. La regola nel prompt veniva seguita in
+  modo intermittente. Ora `plt` iniettato nel REPL è un proxy
+  (`PyplotConGuardia`) il cui `savefig` **rifiuta** una figura con una sola categoria e
+  solleva un errore che spiega come correggere: l'agente legge l'errore come output del
+  proprio codice e ridisegna il confronto completo evidenziando il gruppo richiesto.
+- **Numeri inventati dopo un'osservazione vuota.** Un blocco che termina con
+  un'assegnazione (`media = df.groupby(...).mean()`) non produce output: l'agente non vedeva
+  i numeri e, dovendo scrivere la risposta, li inventava — in un caso riportando 36.000 €
+  invece di 48.258 €, con cifre prese dalle righe di esempio mostrate nel prompt. Il REPL è
+  stato sostituito da `PythonReplConEco`, che non restituisce mai un'osservazione vuota: al
+  suo posto arriva l'istruzione a rieseguire il blocco terminandolo con l'espressione da
+  osservare. Dopo la correzione il valore è stabile su esecuzioni ripetute.
+
+Entrambi i guardrail sono deterministici e lasciano all'agente la libertà di *come*
+correggersi: non irrigidiscono l'autonomia, ne delimitano gli esiti inaccettabili.
+
+### 8.11 I numeri si rileggono dalla fonte
+A un follow-up come «e per il Marketing?» l'orchestratore a volte rispondeva riusando la
+cifra citata nel proprio messaggio precedente, senza richiamare il data agent. Non è
+formalmente un errore, ma è una pessima abitudine per un assistente dati: gli errori si
+propagano e il comportamento diventa imprevedibile. Ora una richiesta di metrica su un
+gruppo rilancia sempre l'analisi.
+
+### 8.12 Resilienza operativa
 Tre problemi emersi avviando davvero l'architettura, non leggendo il codice:
 - **Permessi OpenAI in propagazione**: dopo aver abilitato il modello di embedding, l'API ha
   risposto 403 a intermittenza (5 fallimenti su 10 chiamate) per alcuni minuti. Le chiamate
@@ -383,7 +412,7 @@ Tre problemi emersi avviando davvero l'architettura, non leggendo il codice:
   quello del processo reale, lasciando i servizi in ascolto dopo lo stop. Ora usa `exec` sui
   binari diretti e libera comunque le porte.
 
-### 8.11 Sicurezza
+### 8.13 Sicurezza
 Nessuna chiave nel codice: un unico `.env` alla root, letto da `dotenv` (Node) e
 `python-dotenv` (Python), escluso dal versionamento. Il `PythonAstREPLTool` è confinato
 nel microservizio Python, che non è esposto all'esterno e riceve solo la domanda in

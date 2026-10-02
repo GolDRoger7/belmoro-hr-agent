@@ -28,6 +28,7 @@ import pandas as pd  # noqa: E402
 import seaborn as sns  # noqa: E402
 
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent  # noqa: E402
+from langchain_experimental.tools.python.tool import PythonAstREPLTool  # noqa: E402
 from langchain_openai import ChatOpenAI  # noqa: E402
 
 from . import config  # noqa: E402
@@ -45,6 +46,74 @@ plt.rcParams.update({
     "axes.labelsize": 11,
     "font.size": 10,
 })
+
+
+class PythonReplConEco(PythonAstREPLTool):
+    """
+    REPL Python che non restituisce mai un'osservazione vuota.
+
+    Un blocco che termina con un'assegnazione (`media = df.groupby(...).mean()`)
+    non produce output: l'agente non vede alcun numero e, dovendo poi scrivere la
+    risposta finale, rischia di inventarlo. Qui l'osservazione vuota viene
+    sostituita da un'istruzione esplicita su come ottenere il valore, così il
+    modello è costretto a guardare i dati veri prima di parlarne.
+    """
+
+    def _run(self, *args, **kwargs):
+        risultato = super()._run(*args, **kwargs)
+        if risultato is None or str(risultato).strip() == "":
+            return (
+                "(nessun output: l'ultima riga del blocco è un'assegnazione o un comando "
+                "che non restituisce valore. Se ti serve il risultato per rispondere, "
+                "riesegui il blocco terminandolo con l'espressione da osservare — per "
+                "esempio il nome della variabile appena assegnata — oppure con un print(). "
+                "Non scrivere MAI cifre che non hai letto in un'osservazione.)"
+            )
+        return risultato
+
+
+class PyplotConGuardia:
+    """
+    Proxy su matplotlib.pyplot che fa da GUARDRAIL DETERMINISTICO sul salvataggio.
+
+    Il prompt chiede all'agente di non produrre grafici con una sola barra, ma un
+    modello piccolo non rispetta l'istruzione in modo affidabile. Qui il vincolo
+    non è più una richiesta: `savefig` rifiuta di salvare una figura con una sola
+    categoria e solleva un errore che l'agente legge come output del suo codice,
+    con l'indicazione di come correggere. L'agente rifà il grafico da solo nel
+    giro successivo del ciclo ReAct.
+    """
+
+    def __init__(self, pyplot):
+        self._plt = pyplot
+
+    def __getattr__(self, nome):
+        return getattr(self._plt, nome)
+
+    @staticmethod
+    def _categorie_rappresentate(ax) -> int | None:
+        """Numero di barre/fette; None se il grafico non è categoriale."""
+        patch = [p for p in ax.patches if getattr(p, "get_width", None)]
+        if not patch:
+            return None  # linee, scatter, heatmap: nessun vincolo
+        return len(patch)
+
+    def savefig(self, *args, **kwargs):
+        try:
+            categorie = self._categorie_rappresentate(self._plt.gca())
+        except Exception:
+            categorie = None
+
+        if categorie == 1:
+            raise ValueError(
+                "GRAFICO RIFIUTATO: contiene una sola barra e non comunica nulla. "
+                "Ricalcola la metrica per TUTTI i gruppi della stessa dimensione "
+                "(tutti i dipartimenti, tutte le sedi, tutti i livelli...) e ridisegna "
+                "il confronto completo, colorando di '#c8801f' solo la barra del gruppo "
+                "chiesto dall'utente e di '#1d4e89' le altre. Poi salva di nuovo."
+            )
+        return self._plt.savefig(*args, **kwargs)
+
 
 # Colonne valorizzate solo per chi ha lasciato l'azienda: un valore vuoto qui è
 # un'informazione ("è ancora in forza"), non un dato mancante da scartare.
@@ -131,6 +200,9 @@ soli cessati (es. motivi di uscita, stagionalità delle uscite).
    accettabile. Devi sempre trascrivere nella risposta finale i valori che hai calcolato,
    letti dall'output del codice.
 7. Se un gruppo ha meno di 5 osservazioni, segnalane la scarsa significatività.
+   Non scrivere MAI posizionamenti nella forma "sesto su dieci": il totale lo sbaglieresti a
+   memoria. Scrivi "il sesto valore più alto" oppure, se ti serve davvero il totale,
+   calcolalo prima con `len(serie)` e osservane l'output.
 8. UNITÀ DI MISURA: esprimi ogni differenza fra gruppi sia in valore assoluto sia in
    percentuale, perché gli obiettivi aziendali sono quasi sempre fissati in percentuale.
 9. DIVARIO RETRIBUTIVO: il "gender pay gap" ha due definizioni diverse e non
@@ -167,7 +239,7 @@ soli cessati (es. motivi di uscita, stagionalità delle uscite).
       sns.barplot(x=serie.values, y=serie.index, hue=serie.index, palette=colori, legend=False)
 
   Nel testo rispondi puntualmente sul gruppo chiesto, citando il suo posizionamento
-  rispetto agli altri (es. "terzo su nove").
+  rispetto agli altri (es. "il terzo valore più alto").
 - Genera SEMPRE il grafico quando c'è una dimensione di confronto, un raggruppamento,
   una distribuzione o una serie temporale. Anche un confronto fra due soli gruppi
   (es. uomini e donne) va rappresentato. L'unico caso in cui puoi ometterlo è una
@@ -216,14 +288,22 @@ def _costruisci_agente(df: pd.DataFrame, report: dict, chart_path: Path):
         handle_parsing_errors=True,
     )
 
-    # Iniettiamo nel REPL le librerie di plotting e il percorso del grafico,
-    # così l'LLM non deve indovinare né import né path di salvataggio.
-    for tool in agente.tools:
+    # Iniettiamo nel REPL le librerie di plotting e il percorso del grafico, così
+    # l'LLM non deve indovinare né import né path di salvataggio, e sostituiamo il
+    # tool con la versione che non restituisce mai osservazioni vuote.
+    for indice, tool in enumerate(agente.tools):
         if isinstance(getattr(tool, "locals", None), dict):
-            tool.locals.update({
-                "plt": plt, "sns": sns, "np": np, "pd": pd,
+            spazio = dict(tool.locals)
+            spazio.update({
+                "plt": PyplotConGuardia(plt), "sns": sns, "np": np, "pd": pd,
                 "CHART_PATH": str(chart_path),
             })
+            agente.tools[indice] = PythonReplConEco(
+                name=tool.name,
+                description=tool.description,
+                locals=spazio,
+                globals=dict(getattr(tool, "globals", {}) or {}),
+            )
     return agente
 
 
