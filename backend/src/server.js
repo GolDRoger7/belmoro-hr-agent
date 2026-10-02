@@ -38,7 +38,13 @@ app.use(
 // ---------------------------------------------------------------- health
 app.get("/api/health", async (_req, res) => {
   const [chroma, dataAgent] = await Promise.all([chromaStatus(), dataAgentStatus()]);
-  const ok = chroma.reachable && dataAgent.reachable && Boolean(config.openai.apiKey);
+  // Una collection raggiungibile ma vuota significa "ingestion mai eseguita":
+  // è uno stato degradato, non sano, e va segnalato prima di aprire la chat.
+  const ragPronta = chroma.reachable && chroma.chunks > 0;
+  const ok = ragPronta && dataAgent.reachable && Boolean(config.openai.apiKey);
+  if (chroma.reachable && !chroma.chunks) {
+    chroma.hint = "Collection vuota: esegui `npm run ingest` dalla cartella backend.";
+  }
   res.status(ok ? 200 : 503).json({
     status: ok ? "ok" : "degraded",
     openai: { configured: Boolean(config.openai.apiKey), model: config.openai.chatModel },

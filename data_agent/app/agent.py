@@ -115,11 +115,33 @@ soli cessati (es. motivi di uscita, stagionalità delle uscite).
 3. Turnover: usa `is_cessato` (1 = cessato, 0 = attivo, nessun valore mancante) su TUTTE le
    righe. Il tasso per dipartimento è `df.groupby('dipartimento')['is_cessato'].mean() * 100`.
    L'organico in forza è `df[df['stato'] == 'Attivo']`.
-4. Prima di dare la risposta finale, fai un controllo di plausibilità: quante righe hai
-   davvero usato? Se ne hai escluse più del 20%, o se un tasso risulta 0% su quasi tutti i
-   gruppi, hai quasi certamente filtrato troppo: rivedi i filtri e rifai il calcolo.
-5. Non inventare MAI numeri: ogni cifra citata deve derivare dal codice eseguito.
-6. Se un gruppo ha meno di 5 osservazioni, segnalane la scarsa significatività.
+4. FILTRI ESPLICITI: rileggi la domanda e applica TUTTI i vincoli che nomina prima di
+   calcolare — stato ("attivi"/"in forza" -> `df['stato'] == 'Attivo'`; "cessati"/"usciti"
+   -> `df['stato'] == 'Cessato'`), dipartimento, sede, livello di inquadramento, tipo di
+   contratto, genere, periodo temporale. Dichiara nella nota metodologica quali filtri hai
+   applicato e su quante righe hai lavorato. Se la domanda non nomina alcun filtro, usa
+   l'intero dataset e scrivilo esplicitamente.
+5. Prima di dare la risposta finale, fai un controllo di plausibilità in due punti:
+   (a) ho applicato tutti i filtri citati nella domanda?
+   (b) quante righe ho davvero usato? Se ne ho escluse più del 20%, o se un tasso risulta
+   0% su quasi tutti i gruppi, ho quasi certamente filtrato troppo: rivedo e rifaccio il
+   calcolo.
+6. Non inventare MAI numeri: ogni cifra citata deve derivare dal codice eseguito.
+7. Se un gruppo ha meno di 5 osservazioni, segnalane la scarsa significatività.
+8. UNITÀ DI MISURA: esprimi ogni differenza fra gruppi sia in valore assoluto sia in
+   percentuale, perché gli obiettivi aziendali sono quasi sempre fissati in percentuale.
+9. DIVARIO RETRIBUTIVO: il "gender pay gap" ha due definizioni diverse e non
+   intercambiabili. Quello GREZZO confronta le RAL medie di tutta la popolazione ed è
+   influenzato dalla diversa distribuzione per livello e anzianità; quello CORRETTO
+   confronta uomini e donne a parità di livello di inquadramento (e, dove possibile, di
+   anzianità). Quando ti viene chiesto il gender pay gap calcola ENTRAMBI — il grezzo e
+   quello per livello di inquadramento — e dichiara esplicitamente quale stai riportando:
+   confrontare il gap grezzo con un obiettivo definito sul gap corretto è un errore
+   metodologico. Usa SEMPRE la formula convenzionale (Eurostat/ILO), che mette al
+   denominatore la retribuzione del gruppo di riferimento maschile:
+       gap_% = (media_uomini - media_donne) / media_uomini * 100
+   Usare la media femminile al denominatore gonfia il risultato e non è confrontabile con
+   gli obiettivi aziendali o con i benchmark di mercato.
 
 ## Regole per il grafico (obbligatorie)
 - Nel namespace hai già disponibili: `plt`, `sns`, `pd`, `np` e la variabile stringa
@@ -132,8 +154,11 @@ soli cessati (es. motivi di uscita, stagionalità delle uscite).
 - Nei barplot seaborn usa un colore unico (`color="#1d4e89"`) oppure, se vuoi colorare per
   categoria, passa `hue=<colonna>` con `legend=False`: NON usare `palette=` da solo.
 - Non usare `plt.show()`.
-- Salta il grafico solo se la domanda richiede un singolo numero puntuale senza
-  alcuna dimensione di confronto.
+- Genera SEMPRE il grafico quando c'è una dimensione di confronto, un raggruppamento,
+  una distribuzione o una serie temporale. Anche un confronto fra due soli gruppi
+  (es. uomini e donne) va rappresentato. L'unico caso in cui puoi ometterlo è una
+  domanda la cui risposta è un singolo numero senza alcun termine di paragone
+  (es. "quanti dipendenti abbiamo in totale?").
 
 ## Formato della risposta finale
 Testo in markdown, senza codice, strutturato così:
@@ -201,6 +226,17 @@ def _estrai_codice(intermediate_steps) -> list[str]:
     return codice
 
 
+# Domande la cui risposta è un singolo numero senza termini di paragone: qui il
+# grafico non aggiunge nulla e non vale la pena richiederlo.
+_SENZA_GRAFICO = re.compile(
+    r"\b(quanti|quante|quanto)\b.*\b(in totale|complessivamente|in tutto)\b", re.IGNORECASE
+)
+
+
+def _merita_grafico(domanda: str) -> bool:
+    return not _SENZA_GRAFICO.search(domanda)
+
+
 def esegui_analisi(domanda: str) -> dict:
     """Punto d'ingresso usato dall'endpoint FastAPI."""
     df, report = get_dataframe()
@@ -218,6 +254,28 @@ def esegui_analisi(domanda: str) -> dict:
     if isinstance(sintesi, list):  # alcuni modelli restituiscono blocchi strutturati
         sintesi = "\n".join(b.get("text", "") for b in sintesi if isinstance(b, dict))
 
+    passi = list(esito.get("intermediate_steps") or [])
+
+    # Fallback deterministico: con modelli piccoli capita che l'agente concluda
+    # senza salvare l'immagine. Invece di restituire una risposta monca, gli
+    # chiediamo una volta sola di produrre il grafico sui risultati già ottenuti.
+    if not chart_path.exists() and _merita_grafico(domanda):
+        logger.info("Nessun grafico prodotto: secondo passaggio dedicato alla visualizzazione.")
+        try:
+            recupero = agente.invoke({
+                "input": (
+                    f"Non hai salvato nessun grafico per la richiesta: «{domanda}». "
+                    "Riprendi i risultati che hai appena calcolato e genera ORA il grafico "
+                    "più utile a rappresentarli (confronto fra gruppi, distribuzione o serie "
+                    "temporale, secondo il caso). Salvalo con "
+                    "plt.savefig(CHART_PATH, dpi=150, bbox_inches='tight') seguito da plt.close(). "
+                    "Rispondi solo con una riga che descrive il grafico prodotto."
+                )
+            })
+            passi += list(recupero.get("intermediate_steps") or [])
+        except Exception:  # il grafico è un di più: non deve far fallire l'analisi
+            logger.exception("Anche il secondo passaggio sul grafico è fallito")
+
     grafico = nome_file if chart_path.exists() else None
     if grafico:
         logger.info("Grafico salvato: %s", chart_path)
@@ -225,7 +283,7 @@ def esegui_analisi(domanda: str) -> dict:
     return {
         "summary": sintesi,
         "chart_file": grafico,
-        "code_steps": _estrai_codice(esito.get("intermediate_steps")),
+        "code_steps": _estrai_codice(passi),
         "cleaning_report": riassunto_testuale(report),
         "rows_analyzed": int(len(df)),
     }

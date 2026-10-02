@@ -8,7 +8,7 @@
  * contiene la risposta, deve dichiararlo.
  */
 import { config } from "../config.js";
-import { openai } from "../rag/openaiClient.js";
+import { chatCompletion } from "../rag/openaiClient.js";
 import { searchKnowledgeBase } from "../rag/chromaStore.js";
 
 const PROMPT_RAG = `Sei l'assistente documentale della funzione People & Culture del Caffè Belmoro.
@@ -33,14 +33,17 @@ export async function cercaNellePolicyHr({ query, n_results = 5 }) {
     .map((p, i) => `[${i + 1}] (sezione: ${p.section} | rilevanza: ${p.score})\n${p.text}`)
     .join("\n\n");
 
-  const risposta = await openai.chat.completions.create({
-    model: config.openai.chatModel,
-    temperature: 0,
-    messages: [
-      { role: "system", content: PROMPT_RAG.replace("{contesto}", contesto) },
-      { role: "user", content: query },
-    ],
-  });
+  const risposta = await chatCompletion(
+    {
+      model: config.openai.chatModel,
+      temperature: 0,
+      messages: [
+        { role: "system", content: PROMPT_RAG.replace("{contesto}", contesto) },
+        { role: "user", content: query },
+      ],
+    },
+    "sintesi RAG"
+  );
 
   return {
     answer: risposta.choices[0].message.content,

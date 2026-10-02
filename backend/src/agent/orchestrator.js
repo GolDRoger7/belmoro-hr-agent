@@ -12,7 +12,7 @@
  * dell'LLM ed è tracciata passo passo per essere ispezionabile dal front end.
  */
 import { config } from "../config.js";
-import { openai } from "../rag/openaiClient.js";
+import { chatCompletion } from "../rag/openaiClient.js";
 import { cercaNellePolicyHr, knowledgeBaseToolSchema } from "../tools/knowledgeBaseTool.js";
 import { analizzaDatiDipendenti, dataAnalysisToolSchema } from "../tools/dataAnalysisTool.js";
 
@@ -54,11 +54,24 @@ accessibili solo tramite i tuoi strumenti.
   working?", "il nostro gender pay gap è in linea con l'obiettivo aziendale?") -> usa PRIMA
   "cerca_nelle_policy_hr" per la soglia di policy e POI "analizza_dati_dipendenti" per il dato
   misurato, quindi confronta i due nella risposta finale.
+  In questo caso la richiesta che passi al data agent NON è la domanda dell'utente così com'è:
+  è una richiesta che devi costruire tu a partire dalla definizione letta nella policy, perché
+  misuri esattamente la stessa grandezza. Esempio: se la policy fissa l'obiettivo sul "gender
+  pay gap corretto a parità di ruolo, livello e anzianità, sotto il 3%", chiedi al data agent
+  "calcola il divario retributivo percentuale fra uomini e donne per ciascun livello di
+  inquadramento, oltre al divario grezzo complessivo", non un generico "calcola il gender pay
+  gap". Riporta sempre nell'unità della policy (di norma una percentuale).
 - Rispondi senza strumenti solo per saluti, ringraziamenti, richieste di chiarimento sulle tue
   capacità o riformulazioni di quanto hai già detto in questa conversazione.
 
 ## Regole di risposta
 - Non inventare MAI numeri, soglie o regole: ogni dato deve provenire da un tool.
+- OMOGENEITÀ DEL CONFRONTO: quando metti a confronto un dato misurato con una soglia di
+  policy, verifica che le due grandezze siano davvero confrontabili (stessa unità di
+  misura e stessa definizione). Se non lo sono — per esempio una soglia espressa in
+  percentuale contro un valore misurato in euro, o un obiettivo definito "a parità di
+  ruolo e livello" contro un dato grezzo — dichiaralo apertamente prima di trarre
+  conclusioni, e preferisci la grandezza omogenea se il tool l'ha calcolata.
 - Se un tool fallisce, spiega in modo semplice cosa non ha funzionato e cosa può fare l'utente.
 - Rispondi sempre in italiano, in markdown, con un registro professionale e sintetico da
   business partner HR.
@@ -91,13 +104,16 @@ export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
   let ultimoToolUsato = null;
 
   for (let giro = 0; giro < MAX_GIRI; giro += 1) {
-    const risposta = await openai.chat.completions.create({
-      model: config.openai.chatModel,
-      temperature: 0.2,
-      messages: messaggi,
-      tools: TOOLS,
-      tool_choice: "auto",
-    });
+    const risposta = await chatCompletion(
+      {
+        model: config.openai.chatModel,
+        temperature: 0.2,
+        messages: messaggi,
+        tools: TOOLS,
+        tool_choice: "auto",
+      },
+      "orchestratore"
+    );
 
     const scelta = risposta.choices[0].message;
     messaggi.push(scelta);

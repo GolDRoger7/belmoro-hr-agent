@@ -38,11 +38,29 @@ export function resetCollectionCache() {
 }
 
 /**
+ * Esegue un'operazione sulla collection rinfrescando la cache se necessario.
+ * Una nuova ingestion ricrea la collection da zero: il riferimento tenuto in
+ * memoria punterebbe a un id non più esistente e ogni query fallirebbe finché il
+ * backend non viene riavviato. Qui lo rileviamo e ricarichiamo il riferimento.
+ */
+async function conCollection(operazione) {
+  try {
+    return await operazione(await getCollection());
+  } catch (errore) {
+    if (/not be found|not found|does not exist|InvalidCollection/i.test(errore.message ?? "")) {
+      resetCollectionCache();
+      return operazione(await getCollection());
+    }
+    throw errore;
+  }
+}
+
+/**
  * Ricerca semantica: restituisce i chunk più vicini alla domanda.
  * @returns {Promise<Array<{id:string, text:string, section:string, score:number}>>}
  */
 export async function searchKnowledgeBase(question, nResults = 5) {
-  const collection = await getCollection();
+  return conCollection(async (collection) => {
   const total = await collection.count();
   if (total === 0) {
     throw new Error(
@@ -70,13 +88,14 @@ export async function searchKnowledgeBase(question, nResults = 5) {
     // Chroma restituisce una distanza: la convertiamo in un punteggio leggibile.
     score: distances[i] != null ? Number((1 / (1 + distances[i])).toFixed(3)) : null,
   }));
+  });
 }
 
 /** Diagnostica usata da /api/health. */
 export async function chromaStatus() {
   try {
-    const collection = await getCollection();
-    return { reachable: true, collection: config.chroma.collection, chunks: await collection.count() };
+    const chunks = await conCollection((collection) => collection.count());
+    return { reachable: true, collection: config.chroma.collection, chunks };
   } catch (error) {
     return { reachable: false, collection: config.chroma.collection, error: error.message };
   }
