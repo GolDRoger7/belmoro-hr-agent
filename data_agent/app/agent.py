@@ -46,6 +46,13 @@ plt.rcParams.update({
     "font.size": 10,
 })
 
+# Colonne valorizzate solo per chi ha lasciato l'azienda: un valore vuoto qui è
+# un'informazione ("è ancora in forza"), non un dato mancante da scartare.
+COLONNE_VUOTE_SUGLI_ATTIVI = {
+    "data_cessazione", "anno_cessazione", "mese_cessazione",
+    "motivo_cessazione", "durata_rapporto_anni",
+}
+
 # --- Cache del dataframe pulito (il cleaning gira una volta sola) -----------
 _CACHE: dict[str, Any] = {"df": None, "report": None, "mtime": None}
 
@@ -73,7 +80,11 @@ def _descrizione_schema(df: pd.DataFrame) -> str:
             extra = "valori: " + ", ".join(map(str, valori)) + ("..." if df[col].nunique() > 8 else "")
         else:
             extra = ""
-        righe.append(f"- {col} ({dtype}, {n_na} mancanti) {extra}")
+        if col in COLONNE_VUOTE_SUGLI_ATTIVI:
+            nota = f"({dtype}, {n_na} vuoti = dipendenti ancora in forza, NON dati mancanti)"
+        else:
+            nota = f"({dtype}, {n_na} mancanti)"
+        righe.append(f"- {col} {nota} {extra}")
     return "\n".join(righe)
 
 
@@ -88,15 +99,27 @@ Sul dataframe è stato applicato un layer di pulizia deterministico:
 ## Schema delle colonne
 {schema}
 
+## ATTENZIONE: valori vuoti che NON sono dati mancanti
+Le colonne `data_cessazione`, `anno_cessazione`, `mese_cessazione`, `motivo_cessazione` e
+`durata_rapporto_anni` sono vuote per TUTTI i dipendenti ancora in forza: è il
+comportamento atteso, non un difetto dei dati. NON applicare mai `dropna()` su queste
+colonne quando analizzi l'intero organico: escluderesti in un colpo solo tutti gli attivi
+e falseresti qualunque percentuale. Usale solo quando l'analisi riguarda esplicitamente i
+soli cessati (es. motivi di uscita, stagionalità delle uscite).
+
 ## Regole di analisi che devi rispettare
 1. Rispondi SEMPRE in italiano, con un tono da report per la direzione HR.
-2. Prima di calcolare, gestisci i valori mancanti in modo esplicito e coerente con la
-   domanda (di norma `.dropna()` sulle colonne coinvolte); dichiara nella risposta
-   finale quante righe hai escluso e perché.
-3. Usa `is_cessato` (1 = cessato) per il turnover e `stato == 'Attivo'` per l'organico
-   in forza. Le percentuali di turnover si calcolano come media di `is_cessato`.
-4. Non inventare MAI numeri: ogni cifra citata deve derivare dal codice eseguito.
-5. Se un gruppo ha meno di 5 osservazioni, segnalane la scarsa significatività.
+2. Gestisci i valori mancanti in modo mirato: `.dropna(subset=[...])` SOLO sulle colonne
+   effettivamente usate nel calcolo, mai `.dropna()` sull'intero dataframe. Dichiara nella
+   risposta finale quante righe hai escluso e perché.
+3. Turnover: usa `is_cessato` (1 = cessato, 0 = attivo, nessun valore mancante) su TUTTE le
+   righe. Il tasso per dipartimento è `df.groupby('dipartimento')['is_cessato'].mean() * 100`.
+   L'organico in forza è `df[df['stato'] == 'Attivo']`.
+4. Prima di dare la risposta finale, fai un controllo di plausibilità: quante righe hai
+   davvero usato? Se ne hai escluse più del 20%, o se un tasso risulta 0% su quasi tutti i
+   gruppi, hai quasi certamente filtrato troppo: rivedi i filtri e rifai il calcolo.
+5. Non inventare MAI numeri: ogni cifra citata deve derivare dal codice eseguito.
+6. Se un gruppo ha meno di 5 osservazioni, segnalane la scarsa significatività.
 
 ## Regole per il grafico (obbligatorie)
 - Nel namespace hai già disponibili: `plt`, `sns`, `pd`, `np` e la variabile stringa
@@ -106,6 +129,8 @@ Sul dataframe è stato applicato un layer di pulizia deterministico:
       plt.savefig(CHART_PATH, dpi=150, bbox_inches='tight')
       plt.close()
 - Titolo, etichette degli assi e unità di misura sempre in italiano.
+- Nei barplot seaborn usa un colore unico (`color="#1d4e89"`) oppure, se vuoi colorare per
+  categoria, passa `hue=<colonna>` con `legend=False`: NON usare `palette=` da solo.
 - Non usare `plt.show()`.
 - Salta il grafico solo se la domanda richiede un singolo numero puntuale senza
   alcuna dimensione di confronto.

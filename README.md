@@ -161,7 +161,7 @@ spezzata a metà.
 
 | Componente | Versione | Verifica |
 |---|---|---|
-| Node.js | ≥ 18.17 (testato su 20.19) | `node -v` |
+| Node.js | ≥ 18.18 (testato su 20.11 e 20.19) | `node -v` |
 | Python | ≥ 3.10 (testato su 3.11) | `python3 --version` |
 | Chiave API OpenAI | — | [platform.openai.com](https://platform.openai.com/api-keys) |
 

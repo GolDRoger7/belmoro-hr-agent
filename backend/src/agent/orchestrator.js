@@ -25,6 +25,20 @@ const IMPLEMENTAZIONI = {
   analizza_dati_dipendenti: analizzaDatiDipendenti,
 };
 
+/**
+ * Rete di sicurezza: anche con il prompt più chiaro, l'LLM può inserire un
+ * markdown di immagine verso il PNG. Il grafico è già renderizzato dal front end
+ * come allegato strutturato, quindi lo rimuoviamo dal testo.
+ */
+function ripulisciRisposta(testo) {
+  return (testo ?? "")
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")                 // ![alt](url)
+    .replace(/\[([^\]]*)\]\((?:sandbox:)?\/charts\/[^)]*\)/g, "$1") // [testo](/charts/x.png)
+    .replace(/^\s*(?:Di seguito|Ecco)\b.*grafico.*$/gim, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 const SYSTEM_PROMPT = `Sei "Chicco", l'assistente AI della funzione People & Culture del Caffè Belmoro.
 Supporti HR business partner e responsabili di funzione con due fonti di verità distinte,
 accessibili solo tramite i tuoi strumenti.
@@ -48,8 +62,12 @@ accessibili solo tramite i tuoi strumenti.
 - Se un tool fallisce, spiega in modo semplice cosa non ha funzionato e cosa può fare l'utente.
 - Rispondi sempre in italiano, in markdown, con un registro professionale e sintetico da
   business partner HR.
-- Quando l'analisi dati ha prodotto un grafico, NON descrivere l'immagine e non inserire
-  link o markdown di immagini: il grafico viene mostrato automaticamente sotto la risposta.
+- Quando il tool "analizza_dati_dipendenti" risponde, RIPORTA la sua sintesi mantenendone la
+  struttura (Risposta sintetica / Dettaglio / Insight per People & Culture / Nota metodologica).
+  Puoi accorciarla, non riscriverla come elenco piatto: l'insight manageriale e la nota
+  metodologica sono il valore per chi legge.
+- Il grafico viene mostrato automaticamente sotto la risposta: NON descriverlo, NON scrivere
+  "di seguito il grafico" e NON inserire mai markdown di immagini o link al file .png.
 - Quando usi le policy, mantieni il riferimento alla sezione del manuale.
 - Ricorda a chi legge, quando pertinente, che i dati individuali vanno trattati in forma
   aggregata secondo la policy privacy HR.`;
@@ -87,7 +105,7 @@ export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
     // Nessun tool richiesto: è la risposta finale.
     if (!scelta.tool_calls?.length) {
       return {
-        reply: scelta.content ?? "",
+        reply: ripulisciRisposta(scelta.content),
         charts,
         sources,
         trace: traccia,
