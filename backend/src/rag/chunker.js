@@ -12,6 +12,29 @@
 const MAX_CHARS = 1200;
 const OVERLAP_CHARS = 150;
 
+/**
+ * Ripulisce il testo di un chunk dalle righe puramente decorative del documento
+ * (cornici di "=" e "-"): non portano significato, inquinano l'embedding e
+ * rendono illeggibile l'anteprima della fonte mostrata all'utente.
+ */
+function pulisciTesto(testo) {
+  return testo
+    .split("\n")
+    .filter((riga) => !/^\s*[=\-_*]{6,}\s*$/.test(riga))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/** Ritaglia la coda di sovrapposizione a partire da un confine di parola. */
+function codaPulita(testo) {
+  const coda = testo.slice(-OVERLAP_CHARS);
+  const daFrase = coda.search(/(?<=[.:;!?])\s+/);
+  if (daFrase !== -1 && daFrase < OVERLAP_CHARS - 40) return coda.slice(daFrase).trim();
+  const daParola = coda.search(/\s/);
+  return daParola !== -1 ? coda.slice(daParola + 1) : coda;
+}
+
 /** Divide un blocco troppo lungo in sotto-blocchi con sovrapposizione. */
 function splitLungo(testo) {
   if (testo.length <= MAX_CHARS) return [testo];
@@ -23,8 +46,7 @@ function splitLungo(testo) {
   for (const paragrafo of paragrafi) {
     if ((corrente + "\n\n" + paragrafo).length > MAX_CHARS && corrente) {
       blocchi.push(corrente.trim());
-      const coda = corrente.slice(-OVERLAP_CHARS);
-      corrente = `(...continua)${coda}\n\n${paragrafo}`;
+      corrente = `(...continua) ${codaPulita(corrente)}\n\n${paragrafo}`;
     } else {
       corrente = corrente ? `${corrente}\n\n${paragrafo}` : paragrafo;
     }
@@ -53,7 +75,7 @@ export function chunkKnowledgeBase(raw, fonte) {
     // fallback: documento senza struttura riconoscibile
     return splitLungo(testo).map((text, i) => ({
       id: `chunk-${i}`,
-      text,
+      text: pulisciTesto(text),
       metadata: { sezione: "Documento", fonte, tipo: "testo" },
     }));
   }
@@ -63,7 +85,7 @@ export function chunkKnowledgeBase(raw, fonte) {
   if (preambolo.length > 80) {
     chunks.push({
       id: "sezione-0-0",
-      text: preambolo,
+      text: pulisciTesto(preambolo),
       metadata: { sezione: "Intestazione del manuale", fonte, tipo: "preambolo" },
     });
   }
@@ -83,7 +105,7 @@ export function chunkKnowledgeBase(raw, fonte) {
         if (pulita.length < 25) return;
         chunks.push({
           id: `faq-${i}`,
-          text: `FAQ People & Culture\n${pulita}`,
+          text: pulisciTesto(`FAQ People & Culture\n${pulita}`),
           metadata: { sezione: sezione.titolo, fonte, tipo: "faq" },
         });
       });
@@ -93,7 +115,7 @@ export function chunkKnowledgeBase(raw, fonte) {
     splitLungo(corpo).forEach((blocco, i) => {
       chunks.push({
         id: `sezione-${indice + 1}-${i}`,
-        text: `${sezione.titolo}\n\n${blocco}`.replace(/={20,}[\s\S]*$/, "").trim(),
+        text: pulisciTesto(`${sezione.titolo}\n\n${blocco}`),
         metadata: { sezione: sezione.titolo, fonte, tipo: "policy" },
       });
     });

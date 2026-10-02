@@ -157,6 +157,17 @@ soli cessati (es. motivi di uscita, stagionalità delle uscite).
 - Nei barplot seaborn usa un colore unico (`color="#1d4e89"`) oppure, se vuoi colorare per
   categoria, passa `hue=<colonna>` con `legend=False`: NON usare `palette=` da solo.
 - Non usare `plt.show()`.
+- MAI un grafico con una sola barra o una sola fetta: non comunica nulla. Se la domanda
+  riguarda un singolo gruppo (un dipartimento, una sede, un livello), calcola comunque il
+  valore per TUTTI i gruppi e disegna il confronto completo evidenziando quello richiesto,
+  con questo schema esatto:
+
+      serie = df.groupby('<colonna>')['<metrica>'].mean().sort_values()
+      colori = ["#c8801f" if g == "<gruppo richiesto>" else "#1d4e89" for g in serie.index]
+      sns.barplot(x=serie.values, y=serie.index, hue=serie.index, palette=colori, legend=False)
+
+  Nel testo rispondi puntualmente sul gruppo chiesto, citando il suo posizionamento
+  rispetto agli altri (es. "terzo su nove").
 - Genera SEMPRE il grafico quando c'è una dimensione di confronto, un raggruppamento,
   una distribuzione o una serie temporale. Anche un confronto fra due soli gruppi
   (es. uomini e donne) va rappresentato. L'unico caso in cui puoi ometterlo è una
