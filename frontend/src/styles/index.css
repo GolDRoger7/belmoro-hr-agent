@@ -40,7 +40,7 @@ body {
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: 100%;
-  max-width: 90%;
+  max-width: min(90%, 1500px);
   margin: 0 auto;
   background: var(--superficie);
   box-shadow: var(--ombra);
