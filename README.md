@@ -5,6 +5,8 @@
 > Dataset e knowledge base sono **fittizi**, creati a scopo didattico: non rappresentano
 > dati o policy reali di Caffè Belmoro S.p.A.
 
+📑 **[Presentazione del progetto (PDF, 14 slide)](Presentazione-Chicco-People-and-Culture.pdf)**
+
 ---
 
 ## 1. Il problema di business
@@ -110,6 +112,7 @@ Ogni passo è tracciato e restituito al front end (`trace`), che lo mostra nel p
 │       └── components/               # bolle, badge del tool, grafici, trace, semaforo
 │
 ├── shared/charts/                    # grafici PNG generati a runtime
+├── Presentazione-Chicco-People-and-Culture.pdf   # presentazione per la Direzione People & Culture
 ├── scripts/avvia_tutto.sh            # avvio/arresto dell'intera architettura
 ├── .env.example                      # template delle variabili d'ambiente
 └── .gitignore                        # esclude .env, node_modules, venv, chroma_db, PNG
