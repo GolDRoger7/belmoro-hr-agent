@@ -7,16 +7,16 @@ Documento ad uso interno - Distribuzione: tutti i dipendenti del perimetro Itali
 AVVERTENZA
 Questo documento è un artefatto DIDATTICO e FITTIZIO, creato come knowledge base
 per un progetto universitario di Intelligenza Artificiale. I contenuti sono
-inventati e ispirati a prassi HR di settore: non rappresentano policy reali di
-Caffè Belmoro S.p.A. né di alcuna azienda esistente e non hanno alcun valore legale o
-contrattuale.
+inventati e ispirati a prassi HR di settore. Caffè Belmoro S.p.A. è un'azienda
+inventata: il documento non rappresenta policy reali di alcuna azienda esistente
+e non ha alcun valore legale o contrattuale.
 
 ------------------------------------------------------------------------------
 1. AMBITO DI APPLICAZIONE E GERARCHIA DELLE FONTI
 ------------------------------------------------------------------------------
 
 1.1 Il presente manuale si applica a tutto il personale dipendente delle sedi
-italiane del Gruppo: Torino (headquarter, Nuvola), Rivalta
+italiane del Gruppo: Torino (headquarter), Rivalta
 (stabilimento e polo logistico), Novara, Caserta, Aosta, Milano (uffici
 commerciali) e Roma. Le sedi estere (Londra, Bruxelles) adottano addendum locali
 che prevalgono in caso di conflitto con il presente testo.
@@ -191,9 +191,8 @@ attivabile con contributo agevolato.
 retribuzione utile, elevato al 2,8% per chi versa volontariamente almeno il 3%.
 
 5.5 Benefit di sede: caffetteria aziendale gratuita in tutte le sedi, palestra
-convenzionata, servizio di asilo nido convenzionato a Torino e Settimo
-Torinese, navetta aziendale da Torino Porta Susa allo stabilimento di Settimo
-Torinese.
+convenzionata, servizio di asilo nido convenzionato a Torino e Rivalta,
+navetta aziendale da Torino Porta Susa allo stabilimento di Rivalta.
 
 5.6 Auto aziendale ad uso promiscuo per Dirigenti, Quadri della funzione
 Vendite e per i ruoli con mobilità superiore a 20.000 km annui.

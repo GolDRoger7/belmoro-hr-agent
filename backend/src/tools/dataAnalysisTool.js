@@ -71,7 +71,7 @@ export const dataAnalysisToolSchema = {
   function: {
     name: "analizza_dati_dipendenti",
     description:
-      "Delega a un agente Python (pandas) l'analisi del dataset dei dipendenti Caffè Belmoro " +
+      "Delega a un agente Python (pandas) l'analisi del dataset dei dipendenti di Caffè Belmoro " +
       "(1.240 righe: anagrafica, dipartimento, sede, livello, contratto, RAL, bonus, " +
       "performance rating 1-5, engagement score, ore di formazione, giorni di smart working, " +
       "ferie residue, assenze, data di assunzione e cessazione, motivo di uscita). " +

@@ -1,6 +1,6 @@
 """
 Generatore del dataset HR sintetico per il caso d'uso
-"Caffè Belmoro - People & Culture" (dati FITTIZI a scopo didattico).
+"Caffè Belmoro S.p.A. - People & Culture" (azienda e dati FITTIZI, a scopo didattico).
 
 Il dataset viene generato con anomalie realistiche e volute:
   - valori mancanti (NaN / stringhe vuote)

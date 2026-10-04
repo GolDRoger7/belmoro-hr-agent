@@ -28,7 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger("data_agent")
 
 app = FastAPI(
-    title="Caffè Belmoro People Analytics - Data Agent",
+    title="Belmoro People Analytics - Data Agent",
     description="Agente pandas per l'analisi del dataset HR",
     version="1.0.0",
 )
