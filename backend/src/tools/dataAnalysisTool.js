@@ -6,8 +6,20 @@
  * narrativa, il codice eseguito e il nome del file del grafico prodotto.
  */
 import { config } from "../config.js";
+import { chiaveCache, leggiDallaCache, scriviInCache, invalidaVoce } from "../cache/responseCache.js";
+import { firmaDataset, graficiPresenti } from "../cache/firmeFonti.js";
 
 export async function analizzaDatiDipendenti({ question }) {
+  const chiave = chiaveCache("dati", question, firmaDataset());
+
+  if (config.cache.attiva) {
+    const inCache = leggiDallaCache(chiave);
+    if (inCache) {
+      if (graficiPresenti(inCache.chart_url ? [inCache.chart_url] : [])) return { ...inCache, from_cache: true };
+      invalidaVoce(chiave); // il PNG non c'è più: si rifà l'analisi
+    }
+  }
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), config.dataAgent.timeoutMs);
 
@@ -25,7 +37,7 @@ export async function analizzaDatiDipendenti({ question }) {
     }
 
     const esito = await risposta.json();
-    return {
+    const risultato = {
       summary: esito.summary,
       // il grafico è servito dal backend Node come risorsa statica
       chart_url: esito.chart_file ? `/charts/${esito.chart_file}` : null,
@@ -34,6 +46,9 @@ export async function analizzaDatiDipendenti({ question }) {
       rows_analyzed: esito.rows_analyzed,
       elapsed_seconds: esito.elapsed_seconds,
     };
+
+    if (config.cache.attiva) scriviInCache(chiave, risultato, config.cache.ttlDatiMs);
+    return risultato;
   } catch (error) {
     if (error.name === "AbortError") {
       throw new Error(

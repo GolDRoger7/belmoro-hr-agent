@@ -15,6 +15,55 @@ import { config } from "../config.js";
 import { chatCompletion } from "../rag/openaiClient.js";
 import { cercaNellePolicyHr, knowledgeBaseToolSchema } from "../tools/knowledgeBaseTool.js";
 import { analizzaDatiDipendenti, dataAnalysisToolSchema } from "../tools/dataAnalysisTool.js";
+import { chiaveCache, leggiDallaCache, scriviInCache, normalizzaTesto } from "../cache/responseCache.js";
+import { firmaFonti, graficiPresenti } from "../cache/firmeFonti.js";
+
+const MAX_CARATTERI_CAMPO = 6000;
+const MAX_CARATTERI_TOTALI = 12000;
+
+/** Accorcia un testo dichiarando quanto è stato omesso. */
+function accorcia(testo, massimo) {
+  if (typeof testo !== "string" || testo.length <= massimo) return testo;
+  return `${testo.slice(0, massimo)}\n[...troncato: ${testo.length - massimo} caratteri omessi]`;
+}
+
+/**
+ * Prepara il risultato di un tool da rimandare al modello.
+ *
+ * Tagliare a lunghezza fissa la STRINGA già serializzata spezza la sintassi
+ * JSON proprio sui risultati più grossi — cioè quelli che contano — e il
+ * modello riceve una graffa o una virgoletta a metà. Qui si accorciano invece i
+ * singoli campi PRIMA di serializzare: il JSON resta sempre strutturalmente
+ * valido e dichiara apertamente che cosa è stato tagliato.
+ */
+function perIlModello(esito) {
+  const compatto = { ...esito };
+
+  compatto.summary = accorcia(compatto.summary, MAX_CARATTERI_CAMPO);
+  compatto.answer = accorcia(compatto.answer, MAX_CARATTERI_CAMPO);
+  compatto.cleaning_report = accorcia(compatto.cleaning_report, 1200);
+
+  if (Array.isArray(compatto.code_steps)) {
+    compatto.code_steps = compatto.code_steps.slice(0, 6).map((c) => accorcia(String(c), 1500));
+  }
+  if (Array.isArray(compatto.sources)) {
+    compatto.sources = compatto.sources.map((fonte) => ({
+      ...fonte,
+      preview: accorcia(fonte.preview, 400),
+    }));
+  }
+
+  const serializzato = JSON.stringify(compatto);
+  if (serializzato.length <= MAX_CARATTERI_TOTALI) return serializzato;
+
+  // Ultima riduzione: si tiene solo ciò che serve a comporre la risposta.
+  return JSON.stringify({
+    summary: accorcia(compatto.summary ?? compatto.answer ?? "", 4000),
+    chart_url: compatto.chart_url ?? null,
+    rows_analyzed: compatto.rows_analyzed ?? null,
+    nota: "payload ridotto: i campi secondari sono stati omessi per limiti di contesto",
+  });
+}
 
 const MAX_GIRI = 5;
 
@@ -115,7 +164,41 @@ accessibili solo tramite i tuoi strumenti.
  * @param {string} messaggio nuovo messaggio dell'utente
  * @param {(evento:object)=>void} [onStep] callback opzionale di tracciamento
  */
+/**
+ * Chiave della cache di turno.
+ *
+ * Non basta la domanda: "e per il Marketing?" significa cose diverse a seconda
+ * di che cosa è stato chiesto prima. Nella chiave entra quindi anche
+ * un'impronta della conversazione, così due utenti che aprono la chat e fanno
+ * la stessa domanda condividono la risposta, mentre un follow-up non eredita
+ * mai quella di un'altra conversazione.
+ *
+ * La cache di turno sta QUI e non nei singoli tool perché è l'orchestratore a
+ * riformulare la domanda prima di passarla: a parità di domanda dell'utente la
+ * riformulazione cambia ("per dipartimento" / "per tutti i dipartimenti"), e una
+ * cache più in basso non farebbe mai centro.
+ */
+function chiaveTurno(storico, messaggio) {
+  const contesto = storico.map((m) => `${m.role}:${normalizzaTesto(m.content)}`).join("|");
+  return chiaveCache("turno", `${contesto}>>${messaggio}`, firmaFonti());
+}
+
 export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
+  const chiave = config.cache.attiva ? chiaveTurno(storico, messaggio) : null;
+
+  if (chiave) {
+    const inCache = leggiDallaCache(chiave);
+    if (inCache && graficiPresenti(inCache.charts)) {
+      const traccia = inCache.trace.map((passo) => ({
+        ...passo,
+        cached: true,
+        detail: `${passo.detail} · risposta riusata dalla cache`,
+      }));
+      traccia.forEach((passo) => onStep({ type: "tool_end", ...passo }));
+      return { ...inCache, trace: traccia, fromCache: true };
+    }
+  }
+
   const messaggi = [
     { role: "system", content: SYSTEM_PROMPT },
     ...storico.map(({ role, content }) => ({ role, content })),
@@ -144,7 +227,7 @@ export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
 
     // Nessun tool richiesto: è la risposta finale.
     if (!scelta.tool_calls?.length) {
-      return {
+      const esitoFinale = {
         reply: ripulisciRisposta(scelta.content),
         charts,
         sources,
@@ -152,6 +235,11 @@ export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
         toolUsed: ultimoToolUsato,
         usage: risposta.usage,
       };
+      // Si memorizzano solo i turni andati a buon fine: un errore di un tool non
+      // deve restare appiccicato alla domanda per la mezz'ora successiva.
+      const tuttoRiuscito = traccia.every((passo) => passo.status === "ok");
+      if (chiave && tuttoRiuscito) scriviInCache(chiave, esitoFinale, config.cache.ttlDatiMs);
+      return esitoFinale;
     }
 
     // L'LLM ha deciso di agire: eseguiamo i tool richiesti.
@@ -178,16 +266,18 @@ export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
 
         passo.status = "ok";
         passo.ms = Date.now() - inizio;
+        const daCache = esito.from_cache ? " · risposta riusata dalla cache" : "";
         passo.detail =
-          nome === "cerca_nelle_policy_hr"
+          (nome === "cerca_nelle_policy_hr"
             ? `${esito.sources?.length ?? 0} passaggi recuperati da ChromaDB`
-            : `${esito.rows_analyzed ?? "?"} righe analizzate${esito.chart_url ? ", grafico generato" : ""}`;
+            : `${esito.rows_analyzed ?? "?"} righe analizzate${esito.chart_url ? ", grafico generato" : ""}`) + daCache;
+        passo.cached = Boolean(esito.from_cache);
         if (esito.code_steps?.length) passo.code = esito.code_steps;
 
         messaggi.push({
           role: "tool",
           tool_call_id: chiamata.id,
-          content: JSON.stringify(esito).slice(0, 12000),
+          content: perIlModello(esito),
         });
       } catch (errore) {
         passo.status = "error";

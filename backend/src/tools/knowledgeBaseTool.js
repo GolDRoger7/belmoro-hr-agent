@@ -8,6 +8,8 @@
  * contiene la risposta, deve dichiararlo.
  */
 import { config } from "../config.js";
+import { chiaveCache, leggiDallaCache, scriviInCache } from "../cache/responseCache.js";
+import { firmaKnowledgeBase } from "../cache/firmeFonti.js";
 import { chatCompletion } from "../rag/openaiClient.js";
 import { searchKnowledgeBase } from "../rag/chromaStore.js";
 
@@ -27,6 +29,13 @@ Regole vincolanti:
 --- FINE ESTRATTI ---`;
 
 export async function cercaNellePolicyHr({ query, n_results = 5 }) {
+  const chiave = chiaveCache("rag", `${query}|${n_results}`, firmaKnowledgeBase());
+
+  if (config.cache.attiva) {
+    const inCache = leggiDallaCache(chiave);
+    if (inCache) return { ...inCache, from_cache: true };
+  }
+
   const passaggi = await searchKnowledgeBase(query, n_results);
 
   const contesto = passaggi
@@ -45,7 +54,7 @@ export async function cercaNellePolicyHr({ query, n_results = 5 }) {
     "sintesi RAG"
   );
 
-  return {
+  const esito = {
     answer: risposta.choices[0].message.content,
     sources: passaggi.map((p) => ({
       section: p.section,
@@ -54,6 +63,9 @@ export async function cercaNellePolicyHr({ query, n_results = 5 }) {
       preview: p.text.slice(0, 220).replace(/\s+/g, " ") + "...",
     })),
   };
+
+  if (config.cache.attiva) scriviInCache(chiave, esito, config.cache.ttlRagMs);
+  return esito;
 }
 
 /** Descrizione del tool esposta all'LLM orchestratore (function calling). */

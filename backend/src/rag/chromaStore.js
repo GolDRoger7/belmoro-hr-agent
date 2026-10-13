@@ -5,7 +5,7 @@
  * pronti (embeddingFunction: null): il vector store resta così un puro indice
  * vettoriale e la scelta del modello di embedding vive in un solo punto.
  */
-import { ChromaClient } from "chromadb";
+import { ChromaClient, ChromaNotFoundError, InvalidCollectionError } from "chromadb";
 import { config } from "../config.js";
 import { embedQuery } from "./openaiClient.js";
 
@@ -43,11 +43,27 @@ export function resetCollectionCache() {
  * memoria punterebbe a un id non più esistente e ogni query fallirebbe finché il
  * backend non viene riavviato. Qui lo rileviamo e ricarichiamo il riferimento.
  */
+/**
+ * Riconosce l'errore "collection non più esistente".
+ *
+ * Si parte dalle CLASSI di eccezione esportate dal client: sono stabili fra
+ * versioni e indipendenti dalla lingua del messaggio. Il confronto sul testo
+ * resta solo come ultima rete, per non restare scoperti se una versione futura
+ * dovesse restituire un errore generico.
+ */
+function collectionNonPiuValida(errore) {
+  if (errore instanceof ChromaNotFoundError) return true;
+  if (errore instanceof InvalidCollectionError) return true;
+  if (errore?.name === "ChromaNotFoundError" || errore?.name === "InvalidCollectionError") return true;
+  if (errore?.status === 404) return true;
+  return /not be found|not found|does not exist|InvalidCollection/i.test(errore?.message ?? "");
+}
+
 async function conCollection(operazione) {
   try {
     return await operazione(await getCollection());
   } catch (errore) {
-    if (/not be found|not found|does not exist|InvalidCollection/i.test(errore.message ?? "")) {
+    if (collectionNonPiuValida(errore)) {
       resetCollectionCache();
       return operazione(await getCollection());
     }

@@ -33,6 +33,9 @@ from langchain_openai import ChatOpenAI  # noqa: E402
 
 from . import config  # noqa: E402
 from .data_cleaning import clean_dataframe, riassunto_testuale  # noqa: E402
+from .sandbox import CodiceNonConsentito, spazio_globale_sicuro, valida_codice  # noqa: E402
+from . import store  # noqa: E402
+from langchain_core.tools import Tool  # noqa: E402
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 logger = logging.getLogger("data_agent")
@@ -50,7 +53,15 @@ plt.rcParams.update({
 
 class PythonReplConEco(PythonAstREPLTool):
     """
-    REPL Python che non restituisce mai un'osservazione vuota.
+    REPL Python contenuto, che non restituisce mai un'osservazione vuota.
+
+    Due comportamenti si aggiungono a quello di base.
+
+    CONTENIMENTO. Prima di eseguire, il codice passa dall'analisi statica di
+    `sandbox.valida_codice`: import fuori whitelist, `open`/`eval`/`exec` e
+    accesso agli attributi dunder vengono rifiutati con un messaggio che l'agente
+    legge come output del proprio codice e che gli spiega come riformulare.
+    Nello spazio di esecuzione, inoltre, vivono solo i builtins ammessi.
 
     Un blocco che termina con un'assegnazione (`media = df.groupby(...).mean()`)
     non produce output: l'agente non vede alcun numero e, dovendo poi scrivere la
@@ -60,6 +71,13 @@ class PythonReplConEco(PythonAstREPLTool):
     """
 
     def _run(self, *args, **kwargs):
+        codice = args[0] if args else kwargs.get("query", "")
+        try:
+            valida_codice(str(codice))
+        except CodiceNonConsentito as blocco:
+            logger.warning("Codice rifiutato dal sandbox: %s", blocco)
+            return f"CODICE RIFIUTATO: {blocco}"
+
         risultato = super()._run(*args, **kwargs)
         if risultato is None or str(risultato).strip() == "":
             return (
@@ -123,17 +141,34 @@ COLONNE_VUOTE_SUGLI_ATTIVI = {
 }
 
 # --- Cache del dataframe pulito (il cleaning gira una volta sola) -----------
-_CACHE: dict[str, Any] = {"df": None, "report": None, "mtime": None}
+_CACHE: dict[str, Any] = {"df": None, "report": None, "mtime": None, "modalita": None}
 
 
 def get_dataframe(force_reload: bool = False) -> tuple[pd.DataFrame, dict]:
-    """Carica il CSV, applica il cleaning deterministico e mette in cache."""
+    """
+    Restituisce il dataframe su cui lavora l'agente, insieme al report di pulizia.
+
+    La pulizia non viene più rifatta a ogni avvio: il dataset normalizzato vive in
+    una tabella DuckDB, ricostruita solo quando il CSV cambia. Sopra la soglia di
+    `MAX_RIGHE_IN_MEMORIA` qui arriva un CAMPIONE, e i conti sull'intera
+    popolazione passano dallo strumento SQL (vedi `_costruisci_agente`).
+    """
     mtime = config.CSV_PATH.stat().st_mtime
     if force_reload or _CACHE["df"] is None or _CACHE["mtime"] != mtime:
-        logger.info("Carico e pulisco il dataset da %s", config.CSV_PATH)
-        raw = pd.read_csv(config.CSV_PATH, dtype=str, keep_default_na=False)
-        df, report = clean_dataframe(raw)
-        _CACHE.update({"df": df, "report": report, "mtime": mtime})
+        esito = store.prepara_store(forza=force_reload)
+        modo = store.modalita()
+        limite = None if modo["modalita"] == "dataframe_completo" else 50_000
+        if limite:
+            logger.warning(
+                "Dataset di %s righe oltre la soglia di %s: l'agente lavorerà su un campione "
+                "di %s righe e su SQL per i totali.", modo["righe"], modo["soglia_memoria"], limite
+            )
+        _CACHE.update({
+            "df": store.carica_dataframe(limite=limite),
+            "report": esito["report"],
+            "mtime": mtime,
+            "modalita": modo,
+        })
     return _CACHE["df"], _CACHE["report"]
 
 
@@ -256,6 +291,34 @@ gruppi, per una serie storica almeno gli ultimi 5-8 periodi più il minimo e il 
 """
 
 
+def _strumento_sql() -> Tool:
+    """
+    Espone DuckDB all'agente quando il dataset non sta in memoria.
+
+    Il DataFrame che l'agente ha davanti è in quel caso un campione: per i totali
+    sull'intera popolazione deve passare da qui, dove l'aggregazione viene spinta
+    nel motore e non richiede di materializzare la tabella.
+    """
+
+    def interroga(query: str) -> str:
+        try:
+            risultato = store.esegui_sql(query)
+        except Exception as errore:  # il messaggio torna all'agente, che corregge
+            return f"QUERY RIFIUTATA: {errore}"
+        return risultato.head(100).to_markdown(index=False)
+
+    return Tool(
+        name="interroga_sql",
+        description=(
+            "Esegue una query SQL di sola lettura sulla tabella `dipendenti` di DuckDB, "
+            "che contiene TUTTE le righe del dataset già normalizzate (il dataframe `df` "
+            "che hai davanti è solo un campione). Usalo per conteggi, medie e "
+            "raggruppamenti sull'intera popolazione. Accetta solo SELECT o WITH."
+        ),
+        func=interroga,
+    )
+
+
 def _costruisci_agente(df: pd.DataFrame, report: dict, chart_path: Path):
     if not config.OPENAI_API_KEY:
         raise RuntimeError(
@@ -273,16 +336,30 @@ def _costruisci_agente(df: pd.DataFrame, report: dict, chart_path: Path):
         schema=_descrizione_schema(df),
     )
 
+    modo = (_CACHE.get("modalita") or {}).get("modalita", "dataframe_completo")
+    strumenti_extra = [] if modo == "dataframe_completo" else [_strumento_sql()]
+    if strumenti_extra:
+        prefisso += (
+            "\n\n## ATTENZIONE: `df` è un CAMPIONE\n"
+            "Il dataset completo non sta in memoria. Usa `df` solo per esplorare la forma dei "
+            "dati; ogni cifra che citi nella risposta deve venire da `interroga_sql`, che "
+            "interroga la tabella `dipendenti` con tutte le righe."
+        )
+
     agente = create_pandas_dataframe_agent(
         llm,
         df,
         agent_type="tool-calling",
         prefix=prefisso,
         verbose=True,
-        allow_dangerous_code=True,          # l'esecuzione di codice è il cuore del tool
+        # L'esecuzione di codice è il cuore dello strumento. Il contenimento non
+        # sta in questo flag ma nel REPL sostituito più sotto: analisi statica
+        # del codice e builtins ridotti (vedi sandbox.py).
+        allow_dangerous_code=True,
         return_intermediate_steps=True,
+        extra_tools=strumenti_extra,
         max_iterations=12,
-        max_execution_time=180,
+        max_execution_time=config.BUDGET_ANALISI_S,
         include_df_in_prompt=True,
         number_of_head_rows=5,
         handle_parsing_errors=True,
@@ -302,7 +379,7 @@ def _costruisci_agente(df: pd.DataFrame, report: dict, chart_path: Path):
                 name=tool.name,
                 description=tool.description,
                 locals=spazio,
-                globals=dict(getattr(tool, "globals", {}) or {}),
+                globals=spazio_globale_sicuro(dict(getattr(tool, "globals", {}) or {})),
             )
     return agente
 
@@ -357,6 +434,9 @@ def esegui_analisi(domanda: str) -> dict:
     if not chart_path.exists() and _merita_grafico(domanda):
         logger.info("Nessun grafico prodotto: secondo passaggio dedicato alla visualizzazione.")
         try:
+            # Il secondo giro ha un budget proprio e più stretto: la somma dei due
+            # resta sotto BUDGET_TOTALE_S, che il backend Node conosce da /health.
+            agente.max_execution_time = config.BUDGET_GRAFICO_S
             recupero = agente.invoke({
                 "input": (
                     f"Non hai salvato nessun grafico per la richiesta: «{domanda}». "

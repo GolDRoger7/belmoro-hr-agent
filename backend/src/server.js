@@ -12,6 +12,8 @@ import { eseguiTurno } from "./agent/orchestrator.js";
 import { chromaStatus } from "./rag/chromaStore.js";
 import { dataAgentStatus } from "./tools/dataAnalysisTool.js";
 import { getSession, appendMessages, clearSession, sessionStats } from "./session/sessionStore.js";
+import { avviaPuliziaPeriodica, puliziaGrafici } from "./maintenance/chartCleanup.js";
+import { statisticheCache } from "./cache/responseCache.js";
 
 const app = express();
 
@@ -50,6 +52,8 @@ app.get("/api/health", async (_req, res) => {
     openai: { configured: Boolean(config.openai.apiKey), model: config.openai.chatModel },
     chroma,
     dataAgent,
+    cache: statisticheCache(),
+    charts: { ttl_ore: config.charts.ttlOre, timeout_data_agent_s: config.dataAgent.timeoutMs / 1000 },
     ...sessionStats(),
   });
 });
@@ -82,6 +86,7 @@ app.post("/api/chat", async (req, res) => {
       sources: esito.sources,
       trace: esito.trace,
       toolUsed: esito.toolUsed,
+      fromCache: Boolean(esito.fromCache),
       elapsedMs: Date.now() - inizio,
     });
   } catch (errore) {
@@ -139,6 +144,7 @@ app.post("/api/chat/stream", async (req, res) => {
       sources: esito.sources,
       trace: esito.trace,
       toolUsed: esito.toolUsed,
+      fromCache: Boolean(esito.fromCache),
       elapsedMs: Date.now() - inizio,
     });
   } catch (errore) {
@@ -147,6 +153,13 @@ app.post("/api/chat/stream", async (req, res) => {
   } finally {
     res.end();
   }
+});
+
+// ------------------------------------------------------------ manutenzione
+/** Esecuzione manuale della pulizia dei grafici, utile in demo e in debug. */
+app.post("/api/maintenance/charts", async (_req, res) => {
+  const esito = await puliziaGrafici();
+  res.json({ status: "ok", ...esito, ttl_ore: config.charts.ttlOre });
 });
 
 // --------------------------------------------------------------- sessioni
@@ -163,11 +176,46 @@ try {
   process.exit(1);
 }
 
+/**
+ * Il timeout del chiamante deve superare il budget massimo del chiamato.
+ * Il data agent dichiara il proprio in /health: se Node fosse più impaziente,
+ * chiuderebbe la connessione su analisi che sarebbero arrivate a destinazione.
+ */
+async function verificaAllineamentoTimeout(tentativiRimasti = 5) {
+  try {
+    const risposta = await fetch(`${config.dataAgent.url}/health`, { signal: AbortSignal.timeout(4000) });
+    if (!risposta.ok) throw new Error(`HTTP ${risposta.status}`);
+    const { max_total_seconds: budget } = await risposta.json();
+    if (!budget) return;
+
+    const margine = config.dataAgent.timeoutMs / 1000 - budget;
+    if (margine < 10) {
+      console.warn(
+        `\n⚠️  Timeout disallineati: Node attende ${config.dataAgent.timeoutMs / 1000}s ma il data agent ` +
+          `può impiegarne fino a ${budget}s. Alza DATA_AGENT_TIMEOUT_MS ad almeno ${(budget + 20) * 1000}.\n`
+      );
+    } else {
+      console.log(`   timeout        Node ${config.dataAgent.timeoutMs / 1000}s > data agent ${budget}s (margine ${margine}s)`);
+    }
+  } catch {
+    // Il data agent può non essere ancora pronto: si riprova qualche volta
+    // prima di rinunciare, invece di tacere su un disallineamento reale.
+    if (tentativiRimasti > 0) {
+      setTimeout(() => verificaAllineamentoTimeout(tentativiRimasti - 1), 4000);
+    } else {
+      console.warn("   timeout        data agent non raggiungibile: allineamento non verificato");
+    }
+  }
+}
+
 app.listen(config.server.port, () => {
   console.log("\n☕  Agente HR ibrido Caffè Belmoro - backend orchestratore");
   console.log(`   in ascolto su   http://localhost:${config.server.port}`);
   console.log(`   modello LLM     ${config.openai.chatModel}`);
   console.log(`   ChromaDB        ${config.chroma.host}:${config.chroma.port} (${config.chroma.collection})`);
   console.log(`   data agent      ${config.dataAgent.url}`);
-  console.log(`   grafici         ${config.paths.charts}\n`);
+  console.log(`   grafici         ${config.paths.charts} (pulizia oltre ${config.charts.ttlOre}h)`);
+  console.log(`   cache risposte  ${config.cache.attiva ? "attiva" : "disattivata"}`);
+  avviaPuliziaPeriodica();
+  verificaAllineamentoTimeout().then(() => console.log(""));
 });

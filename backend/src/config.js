@@ -36,7 +36,21 @@ export const config = {
   },
   dataAgent: {
     url: process.env.DATA_AGENT_URL || "http://localhost:8000",
-    timeoutMs: Number(process.env.DATA_AGENT_TIMEOUT_MS || 240000),
+    // Deve restare MAGGIORE del budget massimo del data agent (analisi +
+    // eventuale secondo passaggio per il grafico), altrimenti Node chiude la
+    // connessione mentre Python sta ancora lavorando e l'utente vede un
+    // timeout su un'analisi che sarebbe arrivata. All'avvio il server
+    // confronta questo valore con il budget dichiarato da /health.
+    timeoutMs: Number(process.env.DATA_AGENT_TIMEOUT_MS || 260000),
+  },
+  charts: {
+    ttlOre: Number(process.env.CHARTS_TTL_ORE || 24),
+    intervalloPuliziaMinuti: Number(process.env.CHARTS_PULIZIA_MINUTI || 60),
+  },
+  cache: {
+    attiva: process.env.CACHE_RISPOSTE !== "off",
+    ttlRagMs: Number(process.env.CACHE_TTL_RAG_MINUTI || 60) * 60 * 1000,
+    ttlDatiMs: Number(process.env.CACHE_TTL_DATI_MINUTI || 30) * 60 * 1000,
   },
   paths: {
     csv: resolveFromRoot(process.env.CSV_PATH, "./data/hr_dipendenti_belmoro.csv"),

@@ -8,6 +8,7 @@ uvicorn[standard]==0.52.4
 pydantic>=2.9
 
 # --- Data & visualizzazione ---
+duckdb==1.5.6             # storage colonnare del dataset normalizzato (store.py)
 pandas==3.0.5
 numpy==2.4.6
 matplotlib==3.11.1

@@ -22,6 +22,10 @@ __pycache__/
 chroma_db/
 chroma_data/
 
+# --- Dataset materializzato: si rigenera dal CSV al primo avvio ---
+shared/*.duckdb
+shared/*.duckdb.wal
+
 # --- Output runtime ---
 shared/charts/*.png
 !shared/charts/.gitkeep

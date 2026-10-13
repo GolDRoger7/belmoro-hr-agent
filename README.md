@@ -96,12 +96,17 @@ Ogni passo è tracciato e restituito al front end (`trace`), che lo mostra nel p
 │       ├── rag/chromaStore.js        # client ChromaDB + ricerca semantica
 │       ├── rag/openaiClient.js       # client OpenAI + embedding
 │       ├── scripts/ingest.js         # indicizzazione della KB  (npm run ingest)
-│       └── session/sessionStore.js   # memoria conversazionale lato server
+│       ├── session/sessionStore.js   # memoria conversazionale lato server
+│       ├── cache/responseCache.js    # cache delle risposte (TTL + firma delle fonti)
+│       ├── cache/firmeFonti.js       # impronte di CSV e manuale, condivise
+│       └── maintenance/chartCleanup.js # pulizia periodica dei grafici
 │
 ├── data_agent/                       # MICROSERVIZIO PYTHON
 │   ├── app/main.py                   # FastAPI: /analyze, /schema, /health
 │   ├── app/agent.py                  # pandas agent (LangChain) + generazione grafici
 │   ├── app/data_cleaning.py          # pulizia deterministica + report
+│   ├── app/store.py                  # dataset normalizzato su DuckDB
+│   ├── app/sandbox.py                # contenimento del codice generato dall'LLM
 │   ├── app/config.py                 # lettura del .env condiviso
 │   └── requirements.txt
 │
@@ -423,7 +428,96 @@ linguaggio naturale, mai codice, dal front end.
 
 ---
 
-## 9. API del backend
+## 9. Interventi dopo la revisione tecnica
+
+Sette segnalazioni raccolte in revisione, e come sono state chiuse.
+
+### 9.1 I grafici non si accumulano più
+Ogni analisi scrive un PNG nella cartella condivisa. Un task in background interno
+al backend ([`chartCleanup.js`](backend/src/maintenance/chartCleanup.js)) elimina
+le immagini più vecchie di `CHARTS_TTL_ORE` (24 di default), all'avvio e poi ogni
+ora. È un timer nel processo anziché un cron di sistema perché il backend conosce
+già il percorso dei grafici e vive quanto il servizio: nessuna configurazione
+esterna da tenere allineata. La pulizia si può anche invocare a mano
+(`POST /api/maintenance/charts`), oppure affidare al cron:
+
+```bash
+find ./shared/charts -name "*.png" -mmin +1440 -delete
+```
+
+### 9.2 Cache delle risposte
+Domande identiche o quasi non pagano due volte il costo dell'analisi. La cache sta
+a livello di **turno** e non dei singoli tool, per un motivo preciso: l'orchestratore
+riformula la domanda prima di passarla, e a parità di domanda dell'utente la
+riformulazione cambia («per dipartimento» / «per tutti i dipartimenti»), quindi una
+cache più in basso non farebbe quasi mai centro. La chiave combina la domanda
+normalizzata (minuscole, senza accenti né punteggiatura), un'impronta della
+conversazione — così «e per il Marketing?» non eredita mai la risposta di un'altra
+chat — e la firma delle fonti: se il CSV o il manuale cambiano, le voci che ne
+derivano smettono da sole di essere raggiungibili. Misurato: **13,9 s al primo giro,
+risposta immediata ai successivi**. Restano in cache solo i turni riusciti, e una
+voce il cui grafico è stato nel frattempo ripulito viene scartata.
+
+### 9.3 Il dataset vive su DuckDB
+Leggere e ripulire il CSV a ogni avvio regge con 1.240 righe, non con qualche
+centinaio di migliaia. Il dataset normalizzato viene ora materializzato una volta
+sola in una tabella DuckDB ([`store.py`](data_agent/app/store.py)), ricostruita solo
+quando cambia la firma del CSV. Sopra `MAX_RIGHE_IN_MEMORIA` il comportamento
+degrada in modo esplicito: l'agente riceve un **campione** come dataframe e uno
+strumento `interroga_sql` in sola lettura per i conti sull'intera popolazione, con
+l'aggregazione spinta nel motore. Sotto la soglia nulla cambia e le analisi restano
+quelle verificate.
+
+### 9.4 Il troncamento del risultato non rompe più il JSON
+`JSON.stringify(esito).slice(0, 12000)` tagliava la stringa già serializzata, e
+spezzava la sintassi proprio sui risultati più grossi — quelli che contano — con il
+modello che riceveva una graffa o una virgoletta a metà. Ora si accorciano i
+**singoli campi prima** di serializzare, con una riduzione finale ai soli campi
+indispensabili se il totale resta oltre il limite. Verificato su payload da 40.000
+caratteri, con accenti e virgolette: il JSON resta sempre valido e dichiara quanto
+ha omesso.
+
+### 9.5 Contenimento del codice generato
+L'agente traduce la domanda dell'utente in Python eseguito sull'host: è la
+funzionalità centrale ed è anche la superficie d'attacco. Il contenimento
+([`sandbox.py`](data_agent/app/sandbox.py)) è su due livelli indipendenti:
+
+- **analisi statica** del codice prima dell'esecuzione: import fuori whitelist,
+  `eval`/`exec`/`open`/`__import__`/`getattr` e accesso agli attributi dunder —
+  la via classica per risalire da un oggetto qualsiasi fino a `os` — vengono
+  rifiutati con un messaggio che l'agente legge come output del proprio codice e
+  che gli spiega come riformulare;
+- **builtins ridotti** nello spazio di esecuzione, con un `__import__` che conosce
+  solo i moduli dell'analisi dati.
+
+Provato dal vivo: a una richiesta costruita per farglielo fare, il modello ha
+tentato `import os; os.listdir(".")` cinque volte e il sandbox lo ha bloccato ogni
+volta, registrando il tentativo nel log. Restano fuori dal perimetro i consumi di
+risorse, coperti dal tetto di iterazioni e dal budget di tempo; in produzione si
+aggiungerebbe l'esecuzione in un sottoprocesso con `setrlimit`.
+
+### 9.6 Timeout allineati e verificati all'avvio
+Il rischio era reale e peggiore di quanto sembrasse: oltre all'analisi (180 s)
+poteva scattare il secondo passaggio sul grafico, per un tetto effettivo di 360 s
+contro i 240 s di attesa di Node. Ora il data agent dichiara il proprio budget
+(`BUDGET_ANALISI_S` + `BUDGET_GRAFICO_S` = 195 s) in `/health`, e il backend lo
+confronta con il proprio timeout all'accensione:
+
+```
+timeout        Node 260s > data agent 195s (margine 65s)
+```
+
+Se il margine scende sotto i 10 secondi, l'avvio stampa un avviso con il valore da
+impostare.
+
+### 9.7 Errori Chroma riconosciuti per classe
+Il recupero dopo una reindicizzazione si appoggiava al testo del messaggio
+d'errore: basta un cambio di versione o di lingua e la rete di sicurezza salta in
+silenzio. Ora si parte dalle classi esportate dal client (`ChromaNotFoundError`,
+`InvalidCollectionError`) e dallo stato HTTP, tenendo il confronto sul testo solo
+come ultima rete.
+
+## 10. API del backend
 
 | Metodo | Endpoint | Descrizione |
 |---|---|---|
@@ -431,20 +525,21 @@ linguaggio naturale, mai codice, dal front end.
 | `POST` | `/api/chat/stream` | Come sopra, in streaming SSE con gli eventi di ragionamento |
 | `GET` | `/api/health` | Stato di OpenAI, ChromaDB e data agent |
 | `DELETE` | `/api/sessions/:id` | Azzera la memoria di una conversazione |
+| `POST` | `/api/maintenance/charts` | Esegue subito la pulizia dei grafici scaduti |
 | `GET` | `/charts/<file>.png` | Grafico generato dal data agent |
 
 Microservizio Python: `POST /analyze`, `GET /schema`, `GET /health`.
 
 ---
 
-## 10. Stack
+## 11. Stack
 
 | Livello | Tecnologia |
 |---|---|
 | Front end | React 19 · Vite · react-markdown |
 | Orchestrazione | Node.js 20 · Express 5 · OpenAI SDK (function calling) |
 | Knowledge retrieval | ChromaDB 1.5 (server locale) · `text-embedding-3-small` |
-| Analisi dati | Python 3.11 · FastAPI · pandas · LangChain (pandas agent) · matplotlib/seaborn |
+| Analisi dati | Python 3.11 · FastAPI · pandas · DuckDB · LangChain (pandas agent) · matplotlib/seaborn |
 | LLM | `gpt-4o-mini` (configurabile da `.env`) |
 
 ---

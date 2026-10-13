@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from . import config
 from .agent import esegui_analisi, get_dataframe
 from .data_cleaning import riassunto_testuale
+from . import store
 
 logging.basicConfig(
     level=logging.INFO,
@@ -53,6 +54,14 @@ def health():
             "columns": int(df.shape[1]),
             "model": config.OPENAI_CHAT_MODEL,
             "openai_key_configured": bool(config.OPENAI_API_KEY),
+            # Budget massimo dichiarato al chiamante: il backend Node lo legge
+            # all'avvio e avverte se il proprio timeout è più stretto.
+            "max_total_seconds": config.BUDGET_TOTALE_S,
+            "budget": {
+                "analisi_s": config.BUDGET_ANALISI_S,
+                "grafico_s": config.BUDGET_GRAFICO_S,
+            },
+            "store": store.modalita(),
         }
     except Exception as exc:  # pragma: no cover
         raise HTTPException(status_code=503, detail=f"Dataset non disponibile: {exc}")
@@ -62,6 +71,7 @@ def health():
 def schema():
     df, report = get_dataframe()
     return {
+        "store": store.modalita(),
         "columns": [
             {
                 "name": col,
