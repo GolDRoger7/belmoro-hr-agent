@@ -5,7 +5,7 @@
 > Dataset e knowledge base sono **fittizi**, creati a scopo didattico: non rappresentano
 > dati o policy reali di Caffè Belmoro S.p.A.
 
-📑 **[Presentazione del progetto (PDF, 15 slide)](Presentazione-Chicco-People-and-Culture.pdf)**
+📑 **[Presentazione del progetto (PDF, 16 slide)](Presentazione-Chicco-People-and-Culture.pdf)**
 
 ---
 
