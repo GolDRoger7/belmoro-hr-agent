@@ -65,8 +65,25 @@ fi
 
 echo "🚀 Avvio dell'architettura..."
 
+# 0) Redis (solo se configurato) ----------------------------------------------
+# Cache e sessioni vivono qui, condivise fra le istanze del backend. Se è già in
+# esecuzione lo si lascia stare: potrebbe servire ad altro sulla stessa macchina.
+if [[ -n "${REDIS_URL:-}" ]]; then
+  if redis-cli ping > /dev/null 2>&1; then
+    echo "  0/5 Redis        -> già in esecuzione, lo riutilizzo"
+  elif command -v redis-server > /dev/null 2>&1; then
+    echo "  0/5 Redis        -> ${REDIS_URL}"
+    (exec redis-server --port 6379 --save '' --appendonly no > logs/redis.log 2>&1) &
+    echo "$! redis" >> "$PID_FILE"
+    sleep 1
+  else
+    echo "  0/5 Redis        -> NON installato: cache e sessioni restano in memoria"
+    echo "                      (installalo con 'brew install redis', oppure togli REDIS_URL dal .env)"
+  fi
+fi
+
 # 1) ChromaDB -----------------------------------------------------------------
-echo "  1/4 ChromaDB     -> http://localhost:${CHROMA_PORT:-8001}"
+echo "  1/5 ChromaDB     -> http://localhost:${CHROMA_PORT:-8001}"
 (exec "$ROOT_DIR/data_agent/venv/bin/chroma" run \
   --path "$ROOT_DIR/chroma_db" \
   --host "${CHROMA_HOST:-localhost}" \
@@ -74,18 +91,18 @@ echo "  1/4 ChromaDB     -> http://localhost:${CHROMA_PORT:-8001}"
 echo "$! chromadb" >> "$PID_FILE"
 
 # 2) Data agent Python --------------------------------------------------------
-echo "  2/4 Data agent   -> http://localhost:${DATA_AGENT_PORT:-8000}"
+echo "  2/5 Data agent   -> http://localhost:${DATA_AGENT_PORT:-8000}"
 (cd "$ROOT_DIR/data_agent" && exec "$ROOT_DIR/data_agent/venv/bin/uvicorn" app.main:app \
   --host 127.0.0.1 --port "${DATA_AGENT_PORT:-8000}" > "$ROOT_DIR/logs/data_agent.log" 2>&1) &
 echo "$! data_agent" >> "$PID_FILE"
 
 # 3) Backend Node -------------------------------------------------------------
-echo "  3/4 Backend Node -> http://localhost:${BACKEND_PORT:-3001}"
+echo "  3/5 Backend Node -> http://localhost:${BACKEND_PORT:-3001}"
 (cd "$ROOT_DIR/backend" && exec node src/server.js > "$ROOT_DIR/logs/backend.log" 2>&1) &
 echo "$! backend" >> "$PID_FILE"
 
 # 4) Front end React ----------------------------------------------------------
-echo "  4/4 Front end    -> http://localhost:5173"
+echo "  4/5 Front end    -> http://localhost:5173"
 (cd "$ROOT_DIR/frontend" && exec node_modules/.bin/vite > "$ROOT_DIR/logs/frontend.log" 2>&1) &
 echo "$! frontend" >> "$PID_FILE"
 

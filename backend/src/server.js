@@ -13,7 +13,8 @@ import { chromaStatus } from "./rag/chromaStore.js";
 import { dataAgentStatus } from "./tools/dataAnalysisTool.js";
 import { getSession, appendMessages, clearSession, sessionStats } from "./session/sessionStore.js";
 import { avviaPuliziaPeriodica, puliziaGrafici } from "./maintenance/chartCleanup.js";
-import { statisticheCache } from "./cache/responseCache.js";
+import { verificaRedis } from "./cache/redisClient.js";
+import { statisticheCacheVerificate } from "./cache/responseCache.js";
 
 const app = express();
 
@@ -39,7 +40,11 @@ app.use(
 
 // ---------------------------------------------------------------- health
 app.get("/api/health", async (_req, res) => {
-  const [chroma, dataAgent] = await Promise.all([chromaStatus(), dataAgentStatus()]);
+  const [chroma, dataAgent, cache] = await Promise.all([
+    chromaStatus(),
+    dataAgentStatus(),
+    statisticheCacheVerificate(),
+  ]);
   // Una collection raggiungibile ma vuota significa "ingestion mai eseguita":
   // è uno stato degradato, non sano, e va segnalato prima di aprire la chat.
   const ragPronta = chroma.reachable && chroma.chunks > 0;
@@ -52,7 +57,7 @@ app.get("/api/health", async (_req, res) => {
     openai: { configured: Boolean(config.openai.apiKey), model: config.openai.chatModel },
     chroma,
     dataAgent,
-    cache: statisticheCache(),
+    cache,
     charts: { ttl_ore: config.charts.ttlOre, timeout_data_agent_s: config.dataAgent.timeoutMs / 1000 },
     ...sessionStats(),
   });
@@ -217,5 +222,8 @@ app.listen(config.server.port, () => {
   console.log(`   grafici         ${config.paths.charts} (pulizia oltre ${config.charts.ttlOre}h)`);
   console.log(`   cache risposte  ${config.cache.attiva ? "attiva" : "disattivata"}`);
   avviaPuliziaPeriodica();
+  // Connessione anticipata: senza, la prima riga su Redis comparirebbe solo
+  // alla prima domanda dell'utente.
+  verificaRedis();
   verificaAllineamentoTimeout().then(() => console.log(""));
 });

@@ -17,7 +17,7 @@
  * la cache degrada invece di propagare l'errore all'utente.
  */
 import crypto from "node:crypto";
-import { conRedis, redisConfigurato, statoRedis } from "./redisClient.js";
+import { conRedis, redisConfigurato, statoRedis, verificaRedis } from "./redisClient.js";
 
 const PREFISSO = "chicco:cache:";
 
@@ -100,6 +100,12 @@ export async function scriviInCache(chiave, valore, ttlMs = TTL_PREDEFINITO_MS) 
 export async function invalidaVoce(chiave) {
   voci.delete(chiave);
   await conRedis((redis) => redis.del(PREFISSO + chiave));
+}
+
+/** Variante usata da /health: controlla davvero lo stato di Redis. */
+export async function statisticheCacheVerificate() {
+  await verificaRedis();
+  return statisticheCache();
 }
 
 export function statisticheCache() {

@@ -375,12 +375,24 @@ def _costruisci_agente(df: pd.DataFrame, report: dict, chart_path: Path):
                 "plt": PyplotConGuardia(plt), "sns": sns, "np": np, "pd": pd,
                 "CHART_PATH": str(chart_path),
             })
-            agente.tools[indice] = PythonReplConEco(
+            # UN SOLO spazio dei nomi per globals e locals. Con due dizionari
+            # distinti, `exec` mette le assegnazioni nei locals mentre una list
+            # comprehension — che apre un proprio scope — cerca i nomi nei
+            # globals: codice legittimo come
+            #     serie = df.groupby(...).mean()
+            #     colori = [... if g == serie.idxmax() else ... for g in serie.index]
+            # falliva con NameError, e l'agente restava a ritentare fino a
+            # esaurire il budget. Pydantic copia i dizionari passati al
+            # costruttore, quindi l'allineamento va rifatto dopo.
+            spazio_unico = spazio_globale_sicuro(spazio)
+            strumento = PythonReplConEco(
                 name=tool.name,
                 description=tool.description,
-                locals=spazio,
-                globals=spazio_globale_sicuro(dict(getattr(tool, "globals", {}) or {})),
+                locals=spazio_unico,
+                globals=spazio_unico,
             )
+            strumento.locals = strumento.globals
+            agente.tools[indice] = strumento
     return agente
 
 

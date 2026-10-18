@@ -14,7 +14,7 @@ import { createClient } from "redis";
 
 let client = null;
 let connessione = null;
-let stato = "non configurato";
+let stato = "non ancora connesso";
 let erroreSegnalato = false;
 
 export function redisConfigurato() {
@@ -101,6 +101,21 @@ export async function conRedis(operazione, { timeoutMs = 300 } = {}) {
 export function statoRedis() {
   if (!redisConfigurato()) return { configurato: false, stato: "non configurato" };
   return { configurato: true, stato, pronto: Boolean(client?.isReady) };
+}
+
+/**
+ * Interroga davvero Redis invece di riferire l'ultimo stato noto.
+ *
+ * La connessione è pigra: senza questa verifica /health direbbe "non ancora
+ * connesso" anche con Redis perfettamente funzionante, solo perché nessuno
+ * aveva ancora letto dalla cache. Un controllo di salute che mente è peggio di
+ * nessun controllo.
+ */
+export async function verificaRedis() {
+  if (!redisConfigurato()) return statoRedis();
+  const risposta = await conRedis((redis) => redis.ping(), { timeoutMs: 500 });
+  if (risposta) stato = "connesso";
+  return statoRedis();
 }
 
 export async function chiudiRedis() {

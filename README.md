@@ -175,6 +175,12 @@ spezzata a metà.
 | Node.js | ≥ 18.18 (testato su 20.11 e 20.19) | `node -v` |
 | Python | ≥ 3.10 (testato su 3.11) | `python3 --version` |
 | Chiave API OpenAI | — | [platform.openai.com](https://platform.openai.com/api-keys) |
+| Redis | qualsiasi | `redis-cli ping` → `PONG` |
+
+> Redis ospita cache e sessioni condivise. Se non è installato il sistema parte
+> lo stesso — cache e memoria restano nel processo e lo script di avvio lo
+> segnala — ma per riprodurre il comportamento previsto conviene installarlo:
+> `brew install redis` su macOS, `apt install redis-server` su Debian/Ubuntu.
 
 ### Step 1 — Clonare e configurare i segreti
 
@@ -242,11 +248,20 @@ VIRTUAL_ENV=data_agent/venv uv pip install -r data_agent/requirements.txt
 ### Opzione A — script unico (consigliata)
 
 ```bash
-./scripts/avvia_tutto.sh          # avvia i 4 servizi, log in logs/
+./scripts/avvia_tutto.sh          # avvia i servizi (Redis incluso), log in logs/
 ./scripts/avvia_tutto.sh stop     # li ferma tutti
 ```
 
+Se Redis è già in esecuzione sulla macchina lo script lo riusa invece di
+avviarne un altro.
+
 ### Opzione B — quattro terminali (per vedere i log in diretta)
+
+**Terminale 0 — Redis**
+
+```bash
+redis-server --port 6379
+```
 
 **Terminale 1 — ChromaDB**
 
@@ -529,6 +544,8 @@ che tratterebbe «e per il Marketing?» come una domanda isolata.
 
 Ora cache e sessioni hanno **due depositi dietro la stessa interfaccia**: senza
 `REDIS_URL` restano in memoria, con `REDIS_URL` vivono in Redis e sono condivise.
+Nella configurazione consegnata `REDIS_URL` è valorizzata, quindi il percorso
+attivo è quello condiviso.
 Il punto delicato è stato il comportamento in avaria. Alla prima prova, spegnendo
 Redis a backend acceso, la richiesta è rimasta **appesa per sempre**: il client
 accoda i comandi mentre la connessione è giù e la promise non si risolve mai. La
@@ -571,6 +588,30 @@ data_agent/venv/bin/python data_agent/tests/test_parita_pulizia.py
 # Parità verificata: la pulizia in SQL e quella pandas producono lo stesso dataset.
 ```
 
+### 9.10 Un difetto latente trovato verificando il resto
+Collaudando le modifiche qui sopra, una domanda già vista — «quale reparto ha il
+turnover più alto?» — ha smesso di produrre il grafico. Nel log del data agent
+otto tentativi identici, tutti con lo stesso errore:
+
+```
+NameError: name 'turnover_per_dipartimento' is not defined
+```
+
+Il codice però era corretto: la variabile veniva assegnata due righe sopra e
+usata dentro una list comprehension. La causa sta in come `exec` tratta due
+spazi dei nomi distinti: le assegnazioni finiscono nei *locals*, ma una
+comprehension apre un proprio scope e cerca i nomi nei *globals*, dove quella
+variabile non c'era. Il difetto era presente da sempre e si vedeva solo quando
+il modello scriveva una comprehension che riusa una variabile — cosa che faceva
+ogni volta che doveva evidenziare una barra nel grafico.
+
+L'agente non falliva in modo visibile: ritentava lo stesso blocco fino a
+esaurire il budget, e l'utente riceveva una risposta corretta ma senza grafico.
+La correzione è una riga — un solo spazio dei nomi condiviso fra `globals` e
+`locals` — con l'avvertenza che Pydantic copia i dizionari passati al
+costruttore, quindi l'allineamento va rifatto dopo. Dopo la modifica: grafico
+presente e **zero `NameError`** nel log.
+
 ## 10. API del backend
 
 | Metodo | Endpoint | Descrizione |
@@ -594,7 +635,7 @@ Microservizio Python: `POST /analyze`, `GET /schema`, `GET /health`.
 | Orchestrazione | Node.js 20 · Express 5 · OpenAI SDK (function calling) |
 | Knowledge retrieval | ChromaDB 1.5 (server locale) · `text-embedding-3-small` |
 | Analisi dati | Python 3.11 · FastAPI · DuckDB (pulizia in SQL) · pandas · LangChain (pandas agent) · matplotlib/seaborn |
-| Stato condiviso | Redis opzionale per cache e sessioni; memoria del processo come fallback |
+| Stato condiviso | Redis per cache e sessioni; memoria del processo come fallback automatico |
 | LLM | `gpt-4o-mini` (configurabile da `.env`) |
 
 ---
