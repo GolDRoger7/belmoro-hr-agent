@@ -22,6 +22,10 @@ __pycache__/
 chroma_db/
 chroma_data/
 
+# --- Snapshot di Redis: stato rigenerabile, non va versionato ---
+dump.rdb
+*.rdb
+
 # --- Dataset materializzato: si rigenera dal CSV al primo avvio ---
 shared/*.duckdb
 shared/*.duckdb.wal
