@@ -187,7 +187,7 @@ export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
   const chiave = config.cache.attiva ? chiaveTurno(storico, messaggio) : null;
 
   if (chiave) {
-    const inCache = leggiDallaCache(chiave);
+    const inCache = await leggiDallaCache(chiave);
     if (inCache && graficiPresenti(inCache.charts)) {
       const traccia = inCache.trace.map((passo) => ({
         ...passo,
@@ -238,7 +238,7 @@ export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
       // Si memorizzano solo i turni andati a buon fine: un errore di un tool non
       // deve restare appiccicato alla domanda per la mezz'ora successiva.
       const tuttoRiuscito = traccia.every((passo) => passo.status === "ok");
-      if (chiave && tuttoRiuscito) scriviInCache(chiave, esitoFinale, config.cache.ttlDatiMs);
+      if (chiave && tuttoRiuscito) await scriviInCache(chiave, esitoFinale, config.cache.ttlDatiMs);
       return esitoFinale;
     }
 

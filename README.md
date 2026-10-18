@@ -99,6 +99,7 @@ Ogni passo è tracciato e restituito al front end (`trace`), che lo mostra nel p
 │       ├── session/sessionStore.js   # memoria conversazionale lato server
 │       ├── cache/responseCache.js    # cache delle risposte (TTL + firma delle fonti)
 │       ├── cache/firmeFonti.js       # impronte di CSV e manuale, condivise
+│       ├── cache/redisClient.js      # connessione Redis con degradazione
 │       └── maintenance/chartCleanup.js # pulizia periodica dei grafici
 │
 ├── data_agent/                       # MICROSERVIZIO PYTHON
@@ -106,6 +107,8 @@ Ogni passo è tracciato e restituito al front end (`trace`), che lo mostra nel p
 │   ├── app/agent.py                  # pandas agent (LangChain) + generazione grafici
 │   ├── app/data_cleaning.py          # pulizia deterministica + report
 │   ├── app/store.py                  # dataset normalizzato su DuckDB
+│   ├── app/cleaning_duckdb.py        # pulizia in SQL, senza passare da pandas
+│   └── tests/test_parita_pulizia.py  # confronto cella per cella SQL vs pandas
 │   ├── app/sandbox.py                # contenimento del codice generato dall'LLM
 │   ├── app/config.py                 # lettura del .env condiviso
 │   └── requirements.txt
@@ -517,6 +520,57 @@ silenzio. Ora si parte dalle classi esportate dal client (`ChromaNotFoundError`,
 `InvalidCollectionError`) e dallo stato HTTP, tenendo il confronto sul testo solo
 come ultima rete.
 
+### 9.8 Lo stato non era condiviso fra istanze
+La cache del punto 9.2 viveva nella memoria del processo: due repliche del
+backend non si sarebbero viste a vicenda e ogni riavvio azzerava tutto. Stesso
+difetto, più insidioso, per la memoria conversazionale: dietro un bilanciatore
+la seconda domanda di un utente può finire su un'istanza diversa dalla prima,
+che tratterebbe «e per il Marketing?» come una domanda isolata.
+
+Ora cache e sessioni hanno **due depositi dietro la stessa interfaccia**: senza
+`REDIS_URL` restano in memoria, con `REDIS_URL` vivono in Redis e sono condivise.
+Il punto delicato è stato il comportamento in avaria. Alla prima prova, spegnendo
+Redis a backend acceso, la richiesta è rimasta **appesa per sempre**: il client
+accoda i comandi mentre la connessione è giù e la promise non si risolve mai. La
+correzione è su tre livelli — coda offline disattivata, tentativi di riconnessione
+limitati e soprattutto un **tetto di tempo su ogni operazione**, oltre il quale
+si prosegue con la memoria locale.
+
+Verificato: con Redis attivo e il backend riavviato da zero la risposta torna
+dalla cache in **0,1 s**; con Redis spento l'agente risponde comunque in 7,4 s,
+e `/health` dichiara `redis: pronto false`.
+
+### 9.9 La pulizia non carica più il file in memoria
+Lo store DuckDB del punto 9.3 risolveva la lettura ma non la costruzione: il CSV
+veniva comunque materializzato in un DataFrame pandas per essere ripulito, e solo
+dopo scritto nella tabella. Il picco di memoria restava proporzionale alla
+dimensione del file, cioè il problema che lo store doveva risolvere.
+
+La normalizzazione è ora **una query** ([`cleaning_duckdb.py`](data_agent/app/cleaning_duckdb.py)):
+DuckDB legge il CSV in streaming con `read_csv`, applica trim, deduplica,
+normalizzazione delle categorie, conversione degli importi con separatori misti,
+parsing delle quattro forme di data, controlli di range e colonne derivate, e
+scrive la tabella con un `CREATE TABLE AS SELECT`. In Python tornano solo i
+conteggi del report. Misurato con `tracemalloc`: il picco di allocazioni Python
+durante la costruzione passa da **1,2 MB a 0,0 MB** sul dataset della demo —
+differenza che su mezzo milione di righe diventa centinaia di megabyte, con in
+più la possibilità di DuckDB di riversare su disco quando la memoria non basta.
+
+Riscrivere regole di dominio in un altro linguaggio è però il momento in cui si
+introducono differenze silenziose: una data interpretata diversamente, un
+separatore decimale, un duplicato tenuto invece che scartato. Nessuna fa fallire
+il programma, tutte cambiano i numeri. Per questo
+[`data_cleaning.py`](data_agent/app/data_cleaning.py) resta nel progetto con due
+ruoli espliciti: è la fonte unica delle regole di dominio, che la versione SQL
+importa invece di riscriverle, ed è l'**oracolo del test di parità**
+([`tests/test_parita_pulizia.py`](data_agent/tests/test_parita_pulizia.py)), che
+confronta le due implementazioni cella per cella sul dataset reale.
+
+```bash
+data_agent/venv/bin/python data_agent/tests/test_parita_pulizia.py
+# Parità verificata: la pulizia in SQL e quella pandas producono lo stesso dataset.
+```
+
 ## 10. API del backend
 
 | Metodo | Endpoint | Descrizione |
@@ -539,7 +593,8 @@ Microservizio Python: `POST /analyze`, `GET /schema`, `GET /health`.
 | Front end | React 19 · Vite · react-markdown |
 | Orchestrazione | Node.js 20 · Express 5 · OpenAI SDK (function calling) |
 | Knowledge retrieval | ChromaDB 1.5 (server locale) · `text-embedding-3-small` |
-| Analisi dati | Python 3.11 · FastAPI · pandas · DuckDB · LangChain (pandas agent) · matplotlib/seaborn |
+| Analisi dati | Python 3.11 · FastAPI · DuckDB (pulizia in SQL) · pandas · LangChain (pandas agent) · matplotlib/seaborn |
+| Stato condiviso | Redis opzionale per cache e sessioni; memoria del processo come fallback |
 | LLM | `gpt-4o-mini` (configurabile da `.env`) |
 
 ---

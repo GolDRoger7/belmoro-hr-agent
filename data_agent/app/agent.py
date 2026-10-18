@@ -32,7 +32,7 @@ from langchain_experimental.tools.python.tool import PythonAstREPLTool  # noqa: 
 from langchain_openai import ChatOpenAI  # noqa: E402
 
 from . import config  # noqa: E402
-from .data_cleaning import clean_dataframe, riassunto_testuale  # noqa: E402
+from .data_cleaning import riassunto_testuale  # noqa: E402
 from .sandbox import CodiceNonConsentito, spazio_globale_sicuro, valida_codice  # noqa: E402
 from . import store  # noqa: E402
 from langchain_core.tools import Tool  # noqa: E402

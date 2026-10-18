@@ -13,10 +13,10 @@ export async function analizzaDatiDipendenti({ question }) {
   const chiave = chiaveCache("dati", question, firmaDataset());
 
   if (config.cache.attiva) {
-    const inCache = leggiDallaCache(chiave);
+    const inCache = await leggiDallaCache(chiave);
     if (inCache) {
       if (graficiPresenti(inCache.chart_url ? [inCache.chart_url] : [])) return { ...inCache, from_cache: true };
-      invalidaVoce(chiave); // il PNG non c'è più: si rifà l'analisi
+      await invalidaVoce(chiave); // il PNG non c'è più: si rifà l'analisi
     }
   }
 
@@ -47,7 +47,7 @@ export async function analizzaDatiDipendenti({ question }) {
       elapsed_seconds: esito.elapsed_seconds,
     };
 
-    if (config.cache.attiva) scriviInCache(chiave, risultato, config.cache.ttlDatiMs);
+    if (config.cache.attiva) await scriviInCache(chiave, risultato, config.cache.ttlDatiMs);
     return risultato;
   } catch (error) {
     if (error.name === "AbortError") {

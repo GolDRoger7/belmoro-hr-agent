@@ -67,13 +67,13 @@ app.post("/api/chat", async (req, res) => {
   }
 
   const idSessione = sessionId || randomUUID();
-  const sessione = getSession(idSessione);
+  const sessione = await getSession(idSessione);
 
   try {
     const inizio = Date.now();
     const esito = await eseguiTurno(sessione.messages, message.trim());
 
-    appendMessages(
+    await appendMessages(
       idSessione,
       { role: "user", content: message.trim() },
       { role: "assistant", content: esito.reply }
@@ -114,7 +114,7 @@ app.post("/api/chat/stream", async (req, res) => {
   }
 
   const idSessione = sessionId || randomUUID();
-  const sessione = getSession(idSessione);
+  const sessione = await getSession(idSessione);
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream; charset=utf-8",
@@ -130,7 +130,7 @@ app.post("/api/chat/stream", async (req, res) => {
     const inizio = Date.now();
     const esito = await eseguiTurno(sessione.messages, message.trim(), invia);
 
-    appendMessages(
+    await appendMessages(
       idSessione,
       { role: "user", content: message.trim() },
       { role: "assistant", content: esito.reply }
@@ -163,8 +163,8 @@ app.post("/api/maintenance/charts", async (_req, res) => {
 });
 
 // --------------------------------------------------------------- sessioni
-app.delete("/api/sessions/:id", (req, res) => {
-  clearSession(req.params.id);
+app.delete("/api/sessions/:id", async (req, res) => {
+  await clearSession(req.params.id);
   res.json({ status: "reset", sessionId: req.params.id });
 });
 

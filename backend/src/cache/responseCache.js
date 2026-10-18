@@ -1,5 +1,5 @@
 /**
- * Cache delle risposte dei tool.
+ * Cache delle risposte.
  *
  * Due persone che chiedono "qual è la RAL media per dipartimento?" e "Qual è la
  * RAL media per dipartimento" devono pagare una sola volta il costo dell'analisi.
@@ -8,11 +8,18 @@
  * che li riguardano smettono automaticamente di essere valide, senza bisogno di
  * svuotare la cache a mano.
  *
- * Implementazione in memoria con TTL e tetto di dimensione: sufficiente per una
- * istanza singola. In produzione, con più repliche del backend, la stessa
- * interfaccia si appoggerebbe a Redis.
+ * DUE DEPOSITI DIETRO LA STESSA INTERFACCIA. Senza `REDIS_URL` le voci stanno in
+ * una Map del processo: semplice, ma non condivisa fra istanze e persa a ogni
+ * riavvio. Con `REDIS_URL` le stesse voci vivono in Redis, quindi più repliche
+ * del backend riusano le analisi l'una dell'altra e il riavvio non azzera nulla.
+ *
+ * La memoria locale resta come rete di sicurezza: se Redis smette di rispondere
+ * la cache degrada invece di propagare l'errore all'utente.
  */
 import crypto from "node:crypto";
+import { conRedis, redisConfigurato, statoRedis } from "./redisClient.js";
+
+const PREFISSO = "chicco:cache:";
 
 const voci = new Map();
 
@@ -43,25 +50,21 @@ export function chiaveCache(tool, domanda, firmaFonte) {
   return crypto.createHash("sha256").update(grezza).digest("hex").slice(0, 32);
 }
 
-export function leggiDallaCache(chiave) {
+// --- deposito locale, usato da solo o come rete di sicurezza ---------------
+function leggiLocale(chiave) {
   const voce = voci.get(chiave);
-  if (!voce) {
-    mancati += 1;
-    return null;
-  }
+  if (!voce) return null;
   if (Date.now() > voce.scadenza) {
     voci.delete(chiave);
-    mancati += 1;
     return null;
   }
   // rinfresca la posizione: la voce più usata resta in coda e sopravvive al taglio
   voci.delete(chiave);
   voci.set(chiave, voce);
-  colpi += 1;
   return voce.valore;
 }
 
-export function scriviInCache(chiave, valore, ttlMs = TTL_PREDEFINITO_MS) {
+function scriviLocale(chiave, valore, ttlMs) {
   if (voci.size >= MAX_VOCI) {
     const piuVecchia = voci.keys().next().value;
     voci.delete(piuVecchia);
@@ -69,15 +72,42 @@ export function scriviInCache(chiave, valore, ttlMs = TTL_PREDEFINITO_MS) {
   voci.set(chiave, { valore, scadenza: Date.now() + ttlMs });
 }
 
+export async function leggiDallaCache(chiave) {
+  let valore = null;
+
+  const grezzo = await conRedis((redis) => redis.get(PREFISSO + chiave));
+  if (grezzo) {
+    try {
+      valore = JSON.parse(grezzo);
+    } catch {
+      /* voce illeggibile: vale come assente */
+    }
+  }
+  if (valore === null) valore = leggiLocale(chiave);
+
+  if (valore === null) mancati += 1;
+  else colpi += 1;
+  return valore;
+}
+
+export async function scriviInCache(chiave, valore, ttlMs = TTL_PREDEFINITO_MS) {
+  scriviLocale(chiave, valore, ttlMs);
+
+  await conRedis((redis) => redis.set(PREFISSO + chiave, JSON.stringify(valore), { PX: ttlMs }));
+}
+
 /** Rimuove una voce diventata inservibile (es. il grafico non esiste più). */
-export function invalidaVoce(chiave) {
+export async function invalidaVoce(chiave) {
   voci.delete(chiave);
+  await conRedis((redis) => redis.del(PREFISSO + chiave));
 }
 
 export function statisticheCache() {
   const totale = colpi + mancati;
   return {
-    voci: voci.size,
+    deposito: redisConfigurato() ? "redis" : "memoria",
+    redis: statoRedis(),
+    voci_locali: voci.size,
     colpi,
     mancati,
     tasso_di_riuso: totale ? Number((colpi / totale).toFixed(2)) : 0,

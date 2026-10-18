@@ -14,7 +14,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "openai": "^6.49.0"
+    "openai": "^6.49.0",
+    "redis": "^6.3.0"
   },
   "type": "module",
   "engines": {

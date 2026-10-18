@@ -32,7 +32,7 @@ export async function cercaNellePolicyHr({ query, n_results = 5 }) {
   const chiave = chiaveCache("rag", `${query}|${n_results}`, firmaKnowledgeBase());
 
   if (config.cache.attiva) {
-    const inCache = leggiDallaCache(chiave);
+    const inCache = await leggiDallaCache(chiave);
     if (inCache) return { ...inCache, from_cache: true };
   }
 
@@ -64,7 +64,7 @@ export async function cercaNellePolicyHr({ query, n_results = 5 }) {
     })),
   };
 
-  if (config.cache.attiva) scriviInCache(chiave, esito, config.cache.ttlRagMs);
+  if (config.cache.attiva) await scriviInCache(chiave, esito, config.cache.ttlRagMs);
   return esito;
 }
 

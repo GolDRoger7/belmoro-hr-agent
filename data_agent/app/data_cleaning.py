@@ -1,21 +1,23 @@
 """
-Layer di data cleaning DETERMINISTICO applicato al dataset HR prima di
-consegnarlo all'agente pandas.
+Regole di dominio della pulizia, e implementazione pandas di RIFERIMENTO.
 
-Scelta architetturale
----------------------
-La pulizia avviene su due livelli:
+Questo modulo non è più sul percorso di produzione: la normalizzazione gira
+dentro DuckDB (`cleaning_duckdb.py`), perché caricare il CSV in un DataFrame per
+ripulirlo faceva crescere la memoria con la dimensione del file.
 
- 1) questo modulo, che applica in modo riproducibile e verificabile le
-    correzioni note del dataset (formati data misti, separatori decimali,
-    categorie incoerenti, duplicati, valori fuori range) e produce un
-    REPORT ispezionabile;
- 2) l'agente LLM, che sul dataframe già normalizzato decide caso per caso come
-    trattare i valori mancanti residui (escluderli, imputarli con la mediana,
-    segnalarli) in funzione della domanda dell'utente.
+Resta nel progetto per due motivi, entrambi attivi:
 
-Il primo livello garantisce determinismo e ripetibilità delle analisi; il
-secondo garantisce l'adattabilità richiesta a un agente.
+ 1) è la fonte unica delle REGOLE DI DOMINIO — range ammessi, marcatori di
+    nullo, formati data — che la versione SQL importa da qui invece di
+    riscriverle, così non possono divergere;
+ 2) è l'ORACOLO del test di parità (`tests/test_parita_pulizia.py`), che
+    confronta cella per cella il risultato delle due implementazioni sul
+    dataset reale. È il modo in cui si verifica che la riscrittura in SQL non
+    abbia cambiato un solo numero.
+
+La pulizia resta su due livelli: qui le correzioni deterministiche e
+ripetibili, all'agente LLM la decisione contestuale su come trattare i valori
+mancanti residui in funzione della domanda.
 """
 
 from __future__ import annotations
