@@ -67,6 +67,19 @@ function perIlModello(esito) {
 
 const MAX_GIRI = 5;
 
+/**
+ * Riconosce una risposta che AFFERMA qualcosa di verificabile.
+ *
+ * Il system prompt vieta di rispondere con numeri o soglie senza aver
+ * interrogato uno strumento, ma un divieto scritto non è una garanzia: ogni
+ * tanto il modello risponde lo stesso, e una cifra inventata è indistinguibile
+ * da una misurata per chi legge. Qui si controlla il testo: se contiene cifre o
+ * percentuali e nessuno strumento è stato usato, la risposta non vale.
+ */
+function affermaDatiDaVerificare(testo) {
+  return /\d/.test(testo ?? "");
+}
+
 const TOOLS = [knowledgeBaseToolSchema, dataAnalysisToolSchema];
 
 const IMPLEMENTAZIONI = {
@@ -210,6 +223,11 @@ export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
   let sources = [];
   let ultimoToolUsato = null;
 
+  // Vale per UN SOLO giro: imporre lo strumento a oltranza impedirebbe al
+  // modello di chiudere, perché ogni risposta finale verrebbe rifiutata.
+  let imponiStrumento = false;
+  let recuperoGiaFatto = false;
+
   for (let giro = 0; giro < MAX_GIRI; giro += 1) {
     const risposta = await chatCompletion(
       {
@@ -217,12 +235,31 @@ export async function eseguiTurno(storico, messaggio, onStep = () => {}) {
         temperature: 0.2,
         messages: messaggi,
         tools: TOOLS,
-        tool_choice: "auto",
+        tool_choice: imponiStrumento ? "required" : "auto",
       },
       "orchestratore"
     );
+    imponiStrumento = false;
 
     const scelta = risposta.choices[0].message;
+
+    // Risposta con cifre dentro ma NESSUNO strumento usato in tutto il turno:
+    // si rifà il giro obbligando un tool, invece di consegnare numeri non
+    // verificati. La condizione sulla traccia vuota è essenziale: senza, il
+    // controllo scatterebbe anche sulla risposta finale che riassume analisi
+    // già svolte, e le farebbe rifare da capo.
+    if (
+      !scelta.tool_calls?.length &&
+      traccia.length === 0 &&
+      !recuperoGiaFatto &&
+      affermaDatiDaVerificare(scelta.content)
+    ) {
+      console.warn("⚠️  Risposta con dati ma senza strumenti: ripeto il giro imponendo un tool.");
+      recuperoGiaFatto = true;
+      imponiStrumento = true;
+      continue;
+    }
+
     messaggi.push(scelta);
 
     // Nessun tool richiesto: è la risposta finale.

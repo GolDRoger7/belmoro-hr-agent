@@ -51,6 +51,33 @@ plt.rcParams.update({
 })
 
 
+# Errori il cui messaggio, da solo, non dice all'agente come uscirne: senza un
+# suggerimento il modello ritenta lo stesso blocco finché il budget non scade.
+SUGGERIMENTI_ERRORE: list[tuple[re.Pattern, str]] = [
+    (
+        re.compile(r"does not support operation|agg function failed|could not convert string to float", re.I),
+        "SUGGERIMENTO: stai applicando un'aggregazione a TUTTE le colonne, comprese quelle "
+        "testuali, che pandas non sa mediare. Seleziona prima la colonna numerica — "
+        "df.groupby('colonna_di_gruppo')['colonna_numerica'].mean() — oppure passa "
+        "numeric_only=True all'aggregazione. Non rieseguire lo stesso blocco senza cambiarlo.",
+    ),
+    (
+        re.compile(r"Length of values \(\d+\) does not match length of index|"
+                   r"array length \d+ does not match index length|"
+                   r"All arrays must be of the same length", re.I),
+        "SUGGERIMENTO: stai mettendo insieme serie di lunghezze diverse — tipicamente un "
+        "valore complessivo accanto a uno per ciascun gruppo. Nel grafico usa UNA sola serie "
+        "coerente (il valore per ogni gruppo); se vuoi mostrare anche il dato complessivo, "
+        "disegnalo come linea di riferimento con plt.axvline() o plt.axhline(), non come "
+        "elemento della serie. Non rieseguire lo stesso blocco senza cambiarlo.",
+    ),
+    (
+        re.compile(r"SettingWithCopyWarning|A value is trying to be set on a copy", re.I),
+        "SUGGERIMENTO: stai scrivendo su una vista del dataframe. Usa .copy() dopo il filtro.",
+    ),
+]
+
+
 class PythonReplConEco(PythonAstREPLTool):
     """
     REPL Python contenuto, che non restituisce mai un'osservazione vuota.
@@ -79,6 +106,15 @@ class PythonReplConEco(PythonAstREPLTool):
             return f"CODICE RIFIUTATO: {blocco}"
 
         risultato = super()._run(*args, **kwargs)
+
+        # Un errore che non suggerisce la via d'uscita manda l'agente in loop:
+        # qui gli si dice cosa cambiare, nello stesso punto in cui legge l'errore.
+        testo = str(risultato)
+        for schema, suggerimento in SUGGERIMENTI_ERRORE:
+            if schema.search(testo):
+                logger.info("Errore ricorrente intercettato, aggiungo un suggerimento")
+                return f"{testo}\n\n{suggerimento}"
+
         if risultato is None or str(risultato).strip() == "":
             return (
                 "(nessun output: l'ultima riga del blocco è un'assegnazione o un comando "
