@@ -47,8 +47,17 @@ TABELLA_META = "_meta"
 
 
 def _firma_sorgente() -> str:
+    """
+    Impronta del CSV usata per decidere se ricostruire la tabella.
+
+    Si usa `st_mtime_ns` e non `st_mtime`: il secondo è un float in secondi, e
+    due scritture ravvicinate — una rigenerazione del dataset, un `cp` seguito
+    da una correzione — possono risultare con lo stesso istante. In quel caso lo
+    store si considererebbe aggiornato e continuerebbe a servire i dati vecchi,
+    senza che nulla segnali l'errore. I nanosecondi tolgono l'ambiguità.
+    """
     info = config.CSV_PATH.stat()
-    return f"{int(info.st_mtime)}:{info.st_size}"
+    return f"{info.st_mtime_ns}:{info.st_size}"
 
 
 def _connessione(sola_lettura: bool = False) -> duckdb.DuckDBPyConnection:

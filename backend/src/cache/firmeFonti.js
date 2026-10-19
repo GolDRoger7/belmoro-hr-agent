@@ -12,8 +12,11 @@ import { config } from "../config.js";
 
 function firmaFile(percorso) {
   try {
-    const info = fs.statSync(percorso);
-    return `${info.mtimeMs}:${info.size}`;
+    // `bigint: true` dà mtimeNs: la risoluzione al millisecondo di mtimeMs non
+    // distingue due scritture ravvicinate, e una voce in cache resterebbe
+    // valida su una fonte che nel frattempo è cambiata.
+    const info = fs.statSync(percorso, { bigint: true });
+    return `${info.mtimeNs}:${info.size}`;
   } catch {
     return "assente";
   }

@@ -480,7 +480,14 @@ voce il cui grafico è stato nel frattempo ripulito viene scartata.
 Leggere e ripulire il CSV a ogni avvio regge con 1.240 righe, non con qualche
 centinaio di migliaia. Il dataset normalizzato viene ora materializzato una volta
 sola in una tabella DuckDB ([`store.py`](data_agent/app/store.py)), ricostruita solo
-quando cambia la firma del CSV. Sopra `MAX_RIGHE_IN_MEMORIA` il comportamento
+quando cambia la firma del CSV. La firma usa `st_mtime_ns`, non `st_mtime`:
+quest'ultimo ha risoluzione al secondo, e due scritture ravvicinate — una
+rigenerazione del dataset, un `cp` seguito da una correzione — risulterebbero
+identiche. Lo store si considererebbe aggiornato e continuerebbe a servire i dati
+vecchi, senza che nulla segnali l'errore. Misurato su due scritture a 20 ms di
+distanza: con i secondi le firme coincidono, con i nanosecondi no. Lo stesso vale
+per le impronte che invalidano la cache lato Node, dove `mtimeMs` è stato
+sostituito da `mtimeNs` (`fs.statSync(path, { bigint: true })`). Sopra `MAX_RIGHE_IN_MEMORIA` il comportamento
 degrada in modo esplicito: l'agente riceve un **campione** come dataframe e uno
 strumento `interroga_sql` in sola lettura per i conti sull'intera popolazione, con
 l'aggregazione spinta nel motore. Sotto la soglia nulla cambia e le analisi restano

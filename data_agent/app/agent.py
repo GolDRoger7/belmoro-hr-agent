@@ -189,7 +189,8 @@ def get_dataframe(force_reload: bool = False) -> tuple[pd.DataFrame, dict]:
     `MAX_RIGHE_IN_MEMORIA` qui arriva un CAMPIONE, e i conti sull'intera
     popolazione passano dallo strumento SQL (vedi `_costruisci_agente`).
     """
-    mtime = config.CSV_PATH.stat().st_mtime
+    # Nanosecondi, non secondi: due scritture ravvicinate devono risultare diverse.
+    mtime = config.CSV_PATH.stat().st_mtime_ns
     if force_reload or _CACHE["df"] is None or _CACHE["mtime"] != mtime:
         esito = store.prepara_store(forza=force_reload)
         modo = store.modalita()
